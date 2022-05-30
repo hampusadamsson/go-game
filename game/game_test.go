@@ -11,9 +11,10 @@ func TestGetUnits(t *testing.T) {
 	til := Tile{}
 	uni := &Unit{Owner: p1}
 	til.AddUnit(uni)
+	tf := TileFactory{}
 	g := Game{
 		tiles: [][]Tile{
-			{Plain, til, Plain},
+			{tf.Plain(), til, tf.Plain()},
 		},
 		players: []*Player{p1},
 	}
@@ -23,20 +24,21 @@ func TestGetUnits(t *testing.T) {
 }
 
 func TestGetUnitsMultiple(t *testing.T) {
-	p1 := &Player{}
-	p2 := &Player{}
-	p3 := &Player{}
+	p1 := &Player{name: "a"}
+	p2 := &Player{name: "a"}
+	p3 := &Player{name: "c"}
 	til1 := Tile{unit: &Unit{Owner: p1}}
 	til2 := Tile{unit: &Unit{Owner: p1}}
 	til3 := Tile{unit: &Unit{Owner: p2}}
+	tf := TileFactory{}
 	g := Game{
 		tiles: [][]Tile{
-			{Plain, til1, Plain},
+			{tf.Plain(), til1, tf.Plain()},
 			{til2, til3},
 		},
 		players: []*Player{p1, p2, p3},
 	}
-	assert.Equal(t, len(g.GetUnits(p1)), 2)
-	assert.Equal(t, len(g.GetUnits(p2)), 1)
-	assert.Equal(t, len(g.GetUnits(p3)), 0)
+	assert.Equal(t, 2, len(g.GetUnits(p1)))
+	assert.Equal(t, 1, len(g.GetUnits(p2)))
+	assert.Equal(t, 0, len(g.GetUnits(p3)))
 }

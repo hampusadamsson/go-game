@@ -1,11 +1,11 @@
 package game
 
 type Game struct {
-	tiles    [][]Tile
-	round    int
-	players  []*Player
-	turn     *Player
-	gameOver bool
+	tiles [][]Tile
+	// round    int
+	players []*Player
+	// turn     *Player
+	// gameOver bool
 }
 
 func NewGame() *Game {

@@ -1,7 +1,7 @@
 package game
 
 type Player struct {
-	game *Game
+	name string
 }
 
 // func (p *Player) GetUnits() []*Unit {
