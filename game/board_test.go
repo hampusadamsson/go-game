@@ -6,10 +6,48 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestGetAdjacent(t *testing.T) {
+	b := Board{
+		tiles: [][]Tile{
+			{Tile{}, Tile{}, Tile{}},
+			{Tile{}, Tile{}, Tile{}},
+			{Tile{}, Tile{}, Tile{}},
+		},
+	}
+	assert.Equal(t, 4, len(b.getAdjacent(1, 1)))
+	assert.Equal(t, 2, len(b.getAdjacent(0, 0)))
+	assert.Equal(t, 3, len(b.getAdjacent(0, 1)))
+	assert.Equal(t, 0, len(b.getAdjacent(99, 99)))
+	assert.Equal(t, 2, len(b.getAdjacent(2, 2)))
+	assert.Equal(t, 0, len(b.getAdjacent(3, 3)))
+}
+
+func TestMove(t *testing.T) {
+	u := &Unit{x: 0, y: 1}
+	til := Tile{unit: u}
+	tf := TileFactory{}
+	b := Board{
+		tiles: [][]Tile{
+			{tf.Field(), til, tf.Field()},
+		},
+	}
+	moved0, _ := b.move(u, 0, 1)
+	assert.False(t, moved0)
+
+	moved1, _ := b.move(u, 0, 0)
+	assert.True(t, moved1)
+
+	moved2, _ := b.move(u, 0, 0)
+	assert.False(t, moved2)
+
+	moved3, _ := b.move(u, 0, 1)
+	assert.True(t, moved3)
+}
+
 func TestGetUnit(t *testing.T) {
 	p1 := &Player{}
 	til := Tile{}
-	uni := &Unit{Owner: p1}
+	uni := &Unit{Owner: p1, x: 0, y: 1}
 	til.AddUnit(uni)
 	tf := TileFactory{}
 	b := Board{

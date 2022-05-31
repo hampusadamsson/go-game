@@ -11,11 +11,3 @@ type Game struct {
 func NewGame() *Game {
 	return &Game{} //Fill out
 }
-
-// func (g *Game) move(u *Unit, x int, y int) error {
-// 	g.tiles[u.x][u.y].unit = nil
-// 	if g.ge {
-
-// 	}
-// 	g.tiles[u.x][u.y].unit = nil
-// }
