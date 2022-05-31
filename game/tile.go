@@ -3,15 +3,24 @@ package game
 import "errors"
 
 type Tile struct {
-	Img  ImageMeta
-	unit *Unit
+	Img     ImageMeta
+	unit    *Unit
+	terrain Terrain
 }
+
+type Terrain int
+
+const (
+	sea Terrain = iota
+	ground
+	difficult
+)
 
 func (t *Tile) GetUnit() (*Unit, error) {
 	if t.HasUnit() {
 		return t.unit, nil
 	}
-	return nil, errors.New("no unit")
+	return nil, errors.New("no unit at location")
 }
 
 func (t *Tile) HasUnit() bool {
@@ -25,17 +34,17 @@ func (t *Tile) AddUnit(u *Unit) {
 func GetExampleMap() [][]Tile {
 	tf := TileFactory{}
 	uf := UnitFactory{}
-	p := tf.Plain()
+	p := tf.Field()
 	i := uf.Infantry()
 	p.AddUnit(&i)
 	return [][]Tile{
-		{tf.Plain(), tf.Plain(), tf.Plain(), tf.Plain(), tf.Plain(), tf.Ocean(), tf.Plain(), tf.Plain(), tf.Plain()},
-		{tf.Plain(), tf.Plain(), tf.Plain(), tf.Ocean(), tf.Ocean(), tf.Ocean(), tf.Plain(), tf.Plain(), tf.Plain()},
-		{tf.Plain(), tf.Plain(), tf.Plain(), tf.Ocean(), tf.Mountain(), tf.Mountain(), tf.Plain(), tf.Plain(), tf.Plain()},
-		{tf.Plain(), tf.Plain(), tf.Plain(), tf.Ocean(), tf.Plain(), tf.Plain(), tf.Plain(), tf.Plain(), tf.Plain()},
-		{tf.Ocean(), tf.Ocean(), tf.Ocean(), tf.Ocean(), tf.Plain(), tf.Plain(), tf.Plain(), tf.Plain(), tf.Plain()},
-		{tf.Plain(), tf.Plain(), tf.Plain(), tf.Plain(), p, tf.Plain(), tf.Plain(), tf.Plain(), tf.Plain()},
-		{tf.Plain(), tf.Plain(), tf.Plain(), tf.Plain(), tf.Plain(), tf.Plain(), tf.Plain(), tf.Plain(), tf.Plain()},
-		{tf.Plain(), tf.Plain(), tf.Plain(), tf.Plain(), tf.Plain(), tf.Plain(), tf.Plain(), tf.Plain(), tf.Plain()},
+		{tf.Field(), tf.Field(), tf.Field(), tf.Field(), tf.Field(), tf.Ocean(), tf.Field(), tf.Field(), tf.Field()},
+		{tf.Field(), tf.Field(), tf.Field(), tf.Ocean(), tf.Ocean(), tf.Ocean(), tf.Field(), tf.Field(), tf.Field()},
+		{tf.Field(), tf.Field(), tf.Field(), tf.Ocean(), tf.Mountain(), tf.Mountain(), tf.Field(), tf.Field(), tf.Field()},
+		{tf.Field(), tf.Field(), tf.Field(), tf.Ocean(), tf.Field(), tf.Field(), tf.Field(), tf.Field(), tf.Field()},
+		{tf.Ocean(), tf.Ocean(), tf.Ocean(), tf.Ocean(), tf.Field(), tf.Field(), tf.Field(), tf.Field(), tf.Field()},
+		{tf.Field(), tf.Field(), tf.Field(), tf.Field(), p, tf.Field(), tf.Field(), tf.Field(), tf.Field()},
+		{tf.Field(), tf.Field(), tf.Field(), tf.Field(), tf.Field(), tf.Field(), tf.Field(), tf.Field(), tf.Field()},
+		{tf.Field(), tf.Field(), tf.Field(), tf.Field(), tf.Field(), tf.Field(), tf.Field(), tf.Field(), tf.Field()},
 	}
 }

@@ -2,20 +2,23 @@ package game
 
 type TileFactory struct{}
 
-func (u *TileFactory) Plain() Tile {
+func (u *TileFactory) Field() Tile {
 	return Tile{
-		Img: Plain,
+		Img:     Plain,
+		terrain: ground,
 	}
 }
 
 func (u *TileFactory) Ocean() Tile {
 	return Tile{
-		Img: Ocean,
+		Img:     Ocean,
+		terrain: sea,
 	}
 }
 
 func (u *TileFactory) Mountain() Tile {
 	return Tile{
-		Img: Ocean,
+		Img:     Mountain,
+		terrain: difficult,
 	}
 }

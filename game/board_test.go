@@ -6,19 +6,33 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestGetUnit(t *testing.T) {
+	p1 := &Player{}
+	til := Tile{}
+	uni := &Unit{Owner: p1}
+	til.AddUnit(uni)
+	tf := TileFactory{}
+	b := Board{
+		tiles: [][]Tile{
+			{tf.Field(), til, tf.Field()},
+		},
+	}
+	u, _ := b.GetUnit(0, 1)
+	assert.Equal(t, uni, u)
+}
+
 func TestGetUnits(t *testing.T) {
 	p1 := &Player{}
 	til := Tile{}
 	uni := &Unit{Owner: p1}
 	til.AddUnit(uni)
 	tf := TileFactory{}
-	g := Game{
+	b := Board{
 		tiles: [][]Tile{
-			{tf.Plain(), til, tf.Plain()},
+			{tf.Field(), til, tf.Field()},
 		},
-		players: []*Player{p1},
 	}
-	u := g.GetUnits(p1)
+	u := b.GetUnits(p1)
 	assert.Equal(t, 1, len(u))
 	assert.Equal(t, uni, u[0])
 }
@@ -31,14 +45,13 @@ func TestGetUnitsMultiple(t *testing.T) {
 	til2 := Tile{unit: &Unit{Owner: p1}}
 	til3 := Tile{unit: &Unit{Owner: p2}}
 	tf := TileFactory{}
-	g := Game{
+	b := Board{
 		tiles: [][]Tile{
-			{tf.Plain(), til1, tf.Plain()},
+			{tf.Field(), til1, tf.Field()},
 			{til2, til3},
 		},
-		players: []*Player{p1, p2, p3},
 	}
-	assert.Equal(t, 2, len(g.GetUnits(p1)))
-	assert.Equal(t, 1, len(g.GetUnits(p2)))
-	assert.Equal(t, 0, len(g.GetUnits(p3)))
+	assert.Equal(t, 2, len(b.GetUnits(p1)))
+	assert.Equal(t, 1, len(b.GetUnits(p2)))
+	assert.Equal(t, 0, len(b.GetUnits(p3)))
 }
