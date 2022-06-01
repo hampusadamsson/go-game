@@ -1,17 +1,39 @@
 package game
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
 var (
-	pf   = newPathfinding()
+	pf   = Pathfinding{}
 	one  = Tile{cost: 1}
 	nine = Tile{cost: 9}
 )
+
+func TestRow(t *testing.T) {
+	b := Board{
+		tiles: [][]Tile{
+			{one, nine, one},
+		},
+	}
+	way, dist, _ := pf.FindShortestPath(&b, &Unit{Movement: 10}, coord{0, 0}, coord{0, 2})
+	assert.Equal(t, 10, dist)
+	assert.Equal(t, 2, len(way))
+}
+
+func TestColumn(t *testing.T) {
+	b := Board{
+		tiles: [][]Tile{
+			{one},
+			{nine},
+			{one},
+		},
+	}
+	_, dist, _ := pf.FindShortestPath(&b, &Unit{Movement: 10}, coord{0, 0}, coord{2, 0})
+	assert.Equal(t, 10, dist)
+}
 
 func TestEasy(t *testing.T) {
 	b := Board{
@@ -21,10 +43,10 @@ func TestEasy(t *testing.T) {
 			{one, one, one},
 		},
 	}
-	res, _ := pf.getPath(&b, 0, 0, 2, 2)
-	assert.Equal(t, 4, res.cost)
-	res2, _ := pf.getPath(&b, 0, 0, 0, 2)
-	assert.Equal(t, 6, res2.cost)
+	_, dist, _ := pf.FindShortestPath(&b, &Unit{Movement: 4}, coord{0, 0}, coord{2, 2})
+	assert.Equal(t, 4, dist)
+	_, dist2, _ := pf.FindShortestPath(&b, &Unit{Movement: 8}, coord{0, 0}, coord{0, 2})
+	assert.Equal(t, 6, dist2)
 }
 
 func TestMedium(t *testing.T) {
@@ -35,8 +57,8 @@ func TestMedium(t *testing.T) {
 			{nine, nine, one},
 		},
 	}
-	res, _ := pf.getPath(&b, 0, 0, 2, 2)
-	assert.Equal(t, 12, res.cost)
+	_, dist, _ := pf.FindShortestPath(&b, &Unit{Movement: 9999}, coord{0, 0}, coord{2, 2})
+	assert.Equal(t, 12, dist)
 }
 
 func TestHard(t *testing.T) {
@@ -48,35 +70,18 @@ func TestHard(t *testing.T) {
 			{one, one, one, nine, one},
 		},
 	}
-	res, err := pf.getPath(&b, 0, 0, 3, 4)
-	fmt.Println(err)
-	fmt.Println(res.path)
-	assert.Equal(t, 13, res.cost)
+	_, dist, _ := pf.FindShortestPath(&b, &Unit{Movement: 9999}, coord{0, 0}, coord{3, 4})
+	assert.Equal(t, 13, dist)
 }
 
-func TestHard2(t *testing.T) {
+func TestUnitMaxRangeOverstep(t *testing.T) {
 	b := Board{
 		tiles: [][]Tile{
-			{one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one},
-			{one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one},
-			{one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one},
-			{one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one},
-			{one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one},
-			{one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one},
-			{one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one},
-			{one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one},
-			{one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one},
-			{one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one},
-			{one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one},
-			{one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one},
-			{one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one},
-			{one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one},
-			{one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one},
-			{one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one},
-			{one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one},
-			{one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one, one, nine, one, one, one},
+			{one, nine, nine},
+			{one, nine, one},
+			{nine, nine, one},
 		},
 	}
-	res, _ := pf.getPath(&b, 0, 0, len(b.tiles)-1, len(b.tiles[0])-1)
-	fmt.Println(res.path)
+	_, _, canMoveHere := pf.FindShortestPath(&b, &Unit{Movement: 11}, coord{0, 0}, coord{2, 2})
+	assert.False(t, canMoveHere)
 }

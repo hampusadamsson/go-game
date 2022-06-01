@@ -1,62 +1,49 @@
 package game
 
-import "errors"
-
 type Pathfinding struct {
-	history map[coord]int
-	paths   map[coord]coord
 }
 
-type PathResult struct {
-	path []coord
-	cost int
+func (p *Pathfinding) unitCanPass(u *Unit, t *Tile) bool {
+	return true //TODO - add logic for passapble terrain etc.
 }
 
-func newPathfinding() Pathfinding {
-	return Pathfinding{
-		history: make(map[coord]int),
-		paths:   make(map[coord]coord),
-	}
-}
-
-func (p *Pathfinding) getPath(b *Board, x1 int, y1 int, x2 int, y2 int) (*PathResult, error) {
-	START_PENALTY := 99999
-	start := coord{x: x1, y: y1}
-	neighbours := []coord{start}
-	p.history[start] = START_PENALTY
+func (p *Pathfinding) FindShortestPath(b *Board, unit *Unit, from coord, to coord) ([]coord, int, bool) {
+	history := make(map[coord]int)
+	paths := make(map[coord]coord)
+	neighbours := []coord{from}
 	for len(neighbours) != 0 {
 		curTile := neighbours[0]
 		neighbours = neighbours[1:]
 		next := b.getAdjacent(curTile.x, curTile.y)
 		for _, nextCord := range next {
 			nextTile, _ := b.getTile(nextCord.x, nextCord.y)
-			wayHereCost := p.history[curTile] + nextTile.cost
-			if p.history[*nextCord] == 0 || wayHereCost < p.history[*nextCord] {
-				p.history[*nextCord] = wayHereCost
-				p.paths[*nextCord] = curTile
-				neighbours = append(neighbours, *nextCord)
+			wayHereCost := history[curTile] + nextTile.cost
+			if unit.Movement >= wayHereCost {
+				if history[*nextCord] == 0 || wayHereCost < history[*nextCord] && p.unitCanPass(unit, nextTile) {
+					history[*nextCord] = wayHereCost
+					paths[*nextCord] = curTile
+					neighbours = append(neighbours, *nextCord)
+				}
 			}
 		}
 	}
-	totalCost := p.history[coord{x2, y2}]
-	if totalCost != 0 {
-		return &PathResult{
-			cost: totalCost - START_PENALTY,
-			path: p.getWayBack(x2, y2),
-		}, nil
+	if _, ok := paths[to]; ok {
+		return p.getWayBack(paths, from, to), history[to], true
 	} else {
-		return nil, errors.New("no way to destination")
+		return nil, 0, false
 	}
 }
 
-func (p *Pathfinding) getWayBack(x int, y int) []coord {
-	prev := coord{x, y}
+func (p *Pathfinding) getWayBack(paths map[coord]coord, from coord, to coord) []coord {
 	path := make([]coord, 0)
-	path = append(path, prev)
+	path = append(path, to)
 	for {
-		if val, ok := p.paths[prev]; ok {
+		if val, ok := paths[to]; ok {
+			if val.x == from.x && val.y == from.y {
+				return path
+			}
 			path = append(path, val)
-			prev = val
+			to = val
 		} else {
 			return path
 		}
