@@ -4,8 +4,9 @@ import (
 	"errors"
 )
 
-type Board struct {
+type board struct {
 	tiles [][]Tile
+	pf    pathfinding
 }
 
 type coord struct {
@@ -13,14 +14,14 @@ type coord struct {
 	y int
 }
 
-func (b *Board) getCoord(x int, y int) (*coord, error) {
+func (b *board) getCoord(x int, y int) (*coord, error) {
 	if x < 0 || x > len(b.tiles)-1 || y < 0 || y > len(b.tiles[0])-1 {
 		return nil, errors.New("out of bound")
 	}
 	return &coord{x, y}, nil
 }
 
-func (b *Board) getTile(x int, y int) (*Tile, error) {
+func (b *board) getTile(x int, y int) (*Tile, error) {
 	c, err := b.getCoord(x, y)
 	if err != nil {
 		return nil, err
@@ -30,7 +31,7 @@ func (b *Board) getTile(x int, y int) (*Tile, error) {
 	}
 }
 
-func (b *Board) getTiles() chan *Tile {
+func (b *board) getTiles() chan *Tile {
 	c := make(chan *Tile)
 	go func() {
 		for i := 0; i < len(b.tiles); i++ {
@@ -43,7 +44,7 @@ func (b *Board) getTiles() chan *Tile {
 	return c
 }
 
-func (b *Board) move(u *Unit, x int, y int) (bool, error) {
+func (b *board) move(u *Unit, x int, y int) (bool, error) {
 	destTile, _ := b.getTile(x, y)
 	if destTile.isOccupied() {
 		return false, errors.New("destination tile is occupied")
@@ -56,7 +57,7 @@ func (b *Board) move(u *Unit, x int, y int) (bool, error) {
 	return true, nil
 }
 
-func (b *Board) GetUnits(p *Player) []*Unit {
+func (b *board) getUnits(p *Player) []*Unit {
 	units := make([]*Unit, 0)
 	for elem := range b.getTiles() {
 		if u, err := elem.GetUnit(); err == nil {
@@ -68,7 +69,7 @@ func (b *Board) GetUnits(p *Player) []*Unit {
 	return units
 }
 
-func (b *Board) GetUnit(x int, y int) (*Unit, error) {
+func (b *board) getUnit(x int, y int) (*Unit, error) {
 	t, _ := b.getTile(x, y)
 	if u, err := t.GetUnit(); err == nil {
 		return u, nil
@@ -77,7 +78,7 @@ func (b *Board) GetUnit(x int, y int) (*Unit, error) {
 	}
 }
 
-func (b *Board) getAdjacent(x int, y int) []*coord {
+func (b *board) getAdjacent(x int, y int) []*coord {
 	ad := make([]*coord, 0)
 	if t, err := b.getCoord(x-1, y); err == nil {
 		ad = append(ad, t)
@@ -94,6 +95,6 @@ func (b *Board) getAdjacent(x int, y int) []*coord {
 	return ad
 }
 
-func (b *Board) getPath(u *Unit, x int, y int) {
-	// TODO
+func (b *board) getPath(u *Unit, x int, y int) ([]coord, int, bool) {
+	return b.pf.findShortestPath(b, u, coord{u.x, u.y}, coord{x, y})
 }

@@ -3,16 +3,16 @@ package game
 import "errors"
 
 type Tile struct {
-	Img     ImageMeta
+	Img     imageMeta
 	unit    *Unit
-	terrain Terrain
+	terrain terrain
 	cost    int
 }
 
-type Terrain int
+type terrain int
 
 const (
-	sea Terrain = iota
+	sea terrain = iota
 	ground
 	difficult
 )

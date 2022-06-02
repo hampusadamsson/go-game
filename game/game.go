@@ -1,7 +1,7 @@
 package game
 
 type Game struct {
-	board Board
+	board board
 	// round    int
 	players []*Player
 	// turn     *Player

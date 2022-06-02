@@ -1,13 +1,18 @@
 package game
 
-type Pathfinding struct {
+type pathfinding struct {
 }
 
-func (p *Pathfinding) unitCanPass(u *Unit, t *Tile) bool {
-	return true //TODO - add logic for passapble terrain etc.
+func (p *pathfinding) unitCanPass(u *Unit, t *Tile) bool {
+	if u2, err := t.GetUnit(); err == nil {
+		v := u.sameOwner(u2)
+		return v
+	} else {
+		return true
+	}
 }
 
-func (p *Pathfinding) FindShortestPath(b *Board, unit *Unit, from coord, to coord) ([]coord, int, bool) {
+func (p *pathfinding) findShortestPath(b *board, unit *Unit, from coord, to coord) ([]coord, int, bool) {
 	history := make(map[coord]int)
 	paths := make(map[coord]coord)
 	neighbours := []coord{from}
@@ -19,10 +24,13 @@ func (p *Pathfinding) FindShortestPath(b *Board, unit *Unit, from coord, to coor
 			nextTile, _ := b.getTile(nextCord.x, nextCord.y)
 			wayHereCost := history[curTile] + nextTile.cost
 			if unit.Movement >= wayHereCost {
-				if history[*nextCord] == 0 || wayHereCost < history[*nextCord] && p.unitCanPass(unit, nextTile) {
-					history[*nextCord] = wayHereCost
-					paths[*nextCord] = curTile
-					neighbours = append(neighbours, *nextCord)
+				if p.unitCanPass(unit, nextTile) {
+					if history[*nextCord] == 0 || wayHereCost < history[*nextCord] {
+						history[*nextCord] = wayHereCost
+						paths[*nextCord] = curTile
+						neighbours = append(neighbours, *nextCord)
+					}
+
 				}
 			}
 		}
@@ -34,7 +42,7 @@ func (p *Pathfinding) FindShortestPath(b *Board, unit *Unit, from coord, to coor
 	}
 }
 
-func (p *Pathfinding) getWayBack(paths map[coord]coord, from coord, to coord) []coord {
+func (p *pathfinding) getWayBack(paths map[coord]coord, from coord, to coord) []coord {
 	path := make([]coord, 0)
 	path = append(path, to)
 	for {

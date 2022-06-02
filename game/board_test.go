@@ -7,7 +7,7 @@ import (
 )
 
 func TestGetAdjacent(t *testing.T) {
-	b := Board{
+	b := board{
 		tiles: [][]Tile{
 			{Tile{}, Tile{}, Tile{}},
 			{Tile{}, Tile{}, Tile{}},
@@ -26,7 +26,7 @@ func TestMove(t *testing.T) {
 	u := &Unit{x: 0, y: 1}
 	til := Tile{unit: u}
 	tf := TileFactory{}
-	b := Board{
+	b := board{
 		tiles: [][]Tile{
 			{tf.Field(), til, tf.Field()},
 		},
@@ -50,12 +50,12 @@ func TestGetUnit(t *testing.T) {
 	uni := &Unit{Owner: p1, x: 0, y: 1}
 	til.AddUnit(uni)
 	tf := TileFactory{}
-	b := Board{
+	b := board{
 		tiles: [][]Tile{
 			{tf.Field(), til, tf.Field()},
 		},
 	}
-	u, _ := b.GetUnit(0, 1)
+	u, _ := b.getUnit(0, 1)
 	assert.Equal(t, uni, u)
 }
 
@@ -65,12 +65,12 @@ func TestGetUnits(t *testing.T) {
 	uni := &Unit{Owner: p1}
 	til.AddUnit(uni)
 	tf := TileFactory{}
-	b := Board{
+	b := board{
 		tiles: [][]Tile{
 			{tf.Field(), til, tf.Field()},
 		},
 	}
-	u := b.GetUnits(p1)
+	u := b.getUnits(p1)
 	assert.Equal(t, 1, len(u))
 	assert.Equal(t, uni, u[0])
 }
@@ -83,13 +83,13 @@ func TestGetUnitsMultiple(t *testing.T) {
 	til2 := Tile{unit: &Unit{Owner: p1}}
 	til3 := Tile{unit: &Unit{Owner: p2}}
 	tf := TileFactory{}
-	b := Board{
+	b := board{
 		tiles: [][]Tile{
 			{tf.Field(), til1, tf.Field()},
 			{til2, til3},
 		},
 	}
-	assert.Equal(t, 2, len(b.GetUnits(p1)))
-	assert.Equal(t, 1, len(b.GetUnits(p2)))
-	assert.Equal(t, 0, len(b.GetUnits(p3)))
+	assert.Equal(t, 2, len(b.getUnits(p1)))
+	assert.Equal(t, 1, len(b.getUnits(p2)))
+	assert.Equal(t, 0, len(b.getUnits(p3)))
 }
