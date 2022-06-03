@@ -3,7 +3,7 @@ package game
 type pathfinding struct {
 }
 
-func (p *pathfinding) unitCanPass(u *Unit, t *Tile) bool {
+func (p *pathfinding) unitCanPass(u *Unit, t *tile) bool {
 	if u2, err := t.GetUnit(); err == nil {
 		v := u.sameOwner(u2)
 		return v
@@ -12,7 +12,7 @@ func (p *pathfinding) unitCanPass(u *Unit, t *Tile) bool {
 	}
 }
 
-func (p *pathfinding) findShortestPath(b *board, unit *Unit, from coord, to coord) ([]coord, int, bool) {
+func (p *pathfinding) findShortestPath(b *Board, unit *Unit, from coord, to coord) ([]coord, int, bool) {
 	history := make(map[coord]int)
 	paths := make(map[coord]coord)
 	neighbours := []coord{from}

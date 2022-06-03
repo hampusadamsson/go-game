@@ -1,9 +1,9 @@
 package game
 
 type Game struct {
-	board board
+	Board Board
 	// round    int
-	players []*Player
+	Players []*Player
 	// turn     *Player
 	// gameOver bool
 }

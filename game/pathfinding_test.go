@@ -8,14 +8,14 @@ import (
 
 var (
 	pf    = pathfinding{}
-	one   = Tile{cost: 1}
-	nine  = Tile{cost: 9}
-	enemy = Tile{unit: &Unit{Owner: &Player{}}}
+	one   = tile{cost: 1}
+	nine  = tile{cost: 9}
+	enemy = tile{unit: &Unit{Owner: &Player{}}}
 )
 
 func TestRow(t *testing.T) {
-	b := board{
-		tiles: [][]Tile{
+	b := Board{
+		Tiles: [][]tile{
 			{one, nine, one},
 		},
 	}
@@ -25,8 +25,8 @@ func TestRow(t *testing.T) {
 }
 
 func TestColumn(t *testing.T) {
-	b := board{
-		tiles: [][]Tile{
+	b := Board{
+		Tiles: [][]tile{
 			{one},
 			{nine},
 			{one},
@@ -37,8 +37,8 @@ func TestColumn(t *testing.T) {
 }
 
 func TestEasy(t *testing.T) {
-	b := board{
-		tiles: [][]Tile{
+	b := Board{
+		Tiles: [][]tile{
 			{one, nine, one},
 			{one, nine, one},
 			{one, one, one},
@@ -51,8 +51,8 @@ func TestEasy(t *testing.T) {
 }
 
 func TestMedium(t *testing.T) {
-	b := board{
-		tiles: [][]Tile{
+	b := Board{
+		Tiles: [][]tile{
 			{one, nine, nine},
 			{one, nine, one},
 			{nine, nine, one},
@@ -63,8 +63,8 @@ func TestMedium(t *testing.T) {
 }
 
 func TestHard(t *testing.T) {
-	b := board{
-		tiles: [][]Tile{
+	b := Board{
+		Tiles: [][]tile{
 			{one, nine, one, one, one},
 			{one, nine, one, nine, one},
 			{one, nine, one, nine, one},
@@ -76,8 +76,8 @@ func TestHard(t *testing.T) {
 }
 
 func TestUnitMaxRangeOverstep(t *testing.T) {
-	b := board{
-		tiles: [][]Tile{
+	b := Board{
+		Tiles: [][]tile{
 			{one, nine, nine},
 			{one, nine, one},
 			{nine, nine, one},
@@ -88,12 +88,9 @@ func TestUnitMaxRangeOverstep(t *testing.T) {
 }
 
 func TestImpassableUnits(t *testing.T) {
-	b := board{
-		tiles: [][]Tile{
-			{one, enemy, one},
-			{one, enemy, one},
-			{one, enemy, one},
-		},
+	b := Board{
+		Tiles: [][]tile{{one, enemy, one}, {one, enemy, one}, {one, enemy, one}},
+		pf:    pf,
 	}
 	_, _, canMoveHere := pf.findShortestPath(&b, &Unit{Movement: 25}, coord{0, 0}, coord{2, 2})
 	assert.False(t, canMoveHere)
@@ -101,10 +98,10 @@ func TestImpassableUnits(t *testing.T) {
 
 func TestPassableUnits(t *testing.T) {
 	p1 := Player{}
-	b := board{
-		tiles: [][]Tile{
+	b := Board{
+		Tiles: [][]tile{
 			{one, enemy, one},
-			{one, Tile{unit: &Unit{Owner: &p1}}, one},
+			{one, tile{unit: &Unit{Owner: &p1}}, one},
 			{one, enemy, one},
 		},
 	}

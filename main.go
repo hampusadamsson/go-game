@@ -34,7 +34,7 @@ func init() {
 }
 
 type Game struct {
-	game    [][]game.Tile
+	Board   game.Board
 	message interface{}
 }
 
@@ -43,7 +43,7 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	for i, l := range g.game {
+	for i, l := range g.Board.Tiles {
 		for j, tile := range l {
 			op := &ebiten.DrawImageOptions{}
 			// Where to draw it
@@ -68,9 +68,9 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 }
 
 func main() {
+	bf := game.BoardFactory{}
 	g := &Game{
-		message: "",
-		game:    game.GetExampleMap(),
+		Board: bf.Example(),
 	}
 
 	ebiten.SetWindowSize(screenWidth*3, screenHeight*3)
@@ -84,7 +84,7 @@ func main() {
 
 // warp adds a 'bouncy' animation to units
 func (g *Game) warp() {
-	var cur = g.game
+	var cur = g.Board.Tiles
 	for {
 		time.Sleep(time.Millisecond * 1000)
 		for i := 0; i < len(cur); i++ {
