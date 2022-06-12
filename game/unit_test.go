@@ -43,6 +43,19 @@ func TestFightSurvived(t *testing.T) {
 	assert.Equal(t, u2.HP, 1)
 }
 
+func TestUnit_adjacentAttack1(t *testing.T) {
+	u := Unit{x: 0, y: 2, attackRange: 1}
+	a := u.getAllAttackCoords()
+	assert.Contains(t, a, coord{0, 3})
+}
+
+func TestUnit_adjacentAttack(t *testing.T) {
+	u := Unit{x: 5, y: 5, attackRange: 1}
+	a := u.getAllAttackCoords()
+	assert.Contains(t, a, coord{4, 5})
+	assert.Contains(t, a, coord{5, 6})
+}
+
 func TestUnit_getAttackCoordsOne(t *testing.T) {
 	u := Unit{x: 5, y: 5, attackRange: 1}
 	a := u.getAllAttackCoords()
