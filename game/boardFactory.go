@@ -2,11 +2,11 @@ package game
 
 type BoardFactory struct{}
 
-func (b *BoardFactory) Example() Board {
+func (b *BoardFactory) Tutorial1VNone(p1 *Player) Board {
 	tf := TileFactory{}
 	uf := UnitFactory{}
 	p := tf.Field()
-	i := uf.Infantry()
+	i := uf.Infantry(p1)
 	p.AddUnit(&i)
 
 	return Board{
