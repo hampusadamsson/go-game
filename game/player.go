@@ -1,9 +1,20 @@
 package game
 
 type Player struct {
-	name string
+	Name string
+	Act  chan Action
 }
 
-// func (p *Player) GetUnits() []*Unit {
-// 	return p.game.GetUnits(p)
-// }
+type Action struct {
+	ActionType ActionId
+	From       Coord
+	To         Coord
+}
+
+type ActionId int
+
+const (
+	ActionMove   = iota
+	ActionAttack = iota
+	ActionEnd    = iota
+)

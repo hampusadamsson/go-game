@@ -9,16 +9,16 @@ type Board struct {
 	pf    pathfinding
 }
 
-type coord struct {
-	x int
-	y int
+type Coord struct {
+	X int
+	Y int
 }
 
-func (b *Board) getCoord(x int, y int) (*coord, error) {
+func (b *Board) getCoord(x int, y int) (*Coord, error) {
 	if x < 0 || x > len(b.Tiles)-1 || y < 0 || y > len(b.Tiles[0])-1 {
 		return nil, errors.New("out of bound")
 	}
-	return &coord{x, y}, nil
+	return &Coord{x, y}, nil
 }
 
 func (b *Board) getTile(x int, y int) (*tile, error) {
@@ -26,8 +26,18 @@ func (b *Board) getTile(x int, y int) (*tile, error) {
 	if err != nil {
 		return nil, err
 	} else {
-		return &b.Tiles[c.x][c.y], nil
+		return &b.Tiles[c.X][c.Y], nil
 
+	}
+}
+
+func (b *Board) addUnits(u ...*Unit) {
+	for i := 0; i < len(u); i++ {
+		tile, err := b.getTile(u[i].X, u[i].Y)
+		if err != nil {
+			panic("no such position")
+		}
+		tile.AddUnit(u[i])
 	}
 }
 
@@ -49,11 +59,11 @@ func (b *Board) move(u *Unit, x int, y int) (bool, error) {
 	if destTile.isOccupied() {
 		return false, errors.New("destination tile is occupied")
 	}
-	fromTile, _ := b.getTile(u.x, u.y)
+	fromTile, _ := b.getTile(u.X, u.Y)
 	fromTile.RemoveUnit()
 	destTile.AddUnit(u)
-	u.x = x
-	u.y = y
+	u.X = x
+	u.Y = y
 	return true, nil
 }
 
@@ -78,8 +88,8 @@ func (b *Board) getUnit(x int, y int) (*Unit, error) {
 	}
 }
 
-func (b *Board) getAdjacent(x int, y int) []*coord {
-	ad := make([]*coord, 0)
+func (b *Board) getAdjacent(x int, y int) []*Coord {
+	ad := make([]*Coord, 0)
 	if t, err := b.getCoord(x-1, y); err == nil {
 		ad = append(ad, t)
 	}
@@ -95,6 +105,6 @@ func (b *Board) getAdjacent(x int, y int) []*coord {
 	return ad
 }
 
-func (b *Board) getPath(u *Unit, x int, y int) ([]coord, int, bool) {
-	return b.pf.findShortestPath(b, u, coord{u.x, u.y}, coord{x, y})
+func (b *Board) getPath(u *Unit, x int, y int) ([]Coord, int, bool) {
+	return b.pf.findShortestPath(b, u, Coord{u.X, u.Y}, Coord{x, y})
 }

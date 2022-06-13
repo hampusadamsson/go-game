@@ -6,8 +6,8 @@ import (
 
 type Unit struct {
 	Img             imageMeta // Metadata for image and rendering
-	x               int       // x location in game tiles
-	y               int       // y location in game tiles
+	X               int       // x location in game tiles
+	Y               int       // y location in game tiles
 	Owner           *Player   // Who controls the unit
 	ExhaustedMove   bool      // true = unit has a move action
 	ExhaustedAttack bool      // true = unit has an attack action
@@ -35,22 +35,22 @@ func (u *Unit) canAttack() bool {
 	return u.ExhaustedAttack == false && ((u.ExhaustedMove && u.CanMoveAttack) || u.ExhaustedMove == false)
 }
 
-func (u *Unit) getAllAttackCoords() map[coord]bool { // TODO broken
-	pos := make(map[coord]bool, 0)
+func (u *Unit) getAllAttackCoords() map[Coord]bool { // TODO broken
+	pos := make(map[Coord]bool, 0)
 	rng := u.attackRange
 	for i := 0; i < rng+1; i++ {
 		for j := -rng + i; j <= rng-i; j++ {
-			if u.x == u.x+i && u.y == u.y-j { // your own tile
+			if u.X == u.X+i && u.Y == u.Y-j { // your own tile
 			} else {
-				pos[coord{u.x + i, u.y - j}] = true
-				pos[coord{u.x - i, u.y - j}] = true
+				pos[Coord{u.X + i, u.Y - j}] = true
+				pos[Coord{u.X - i, u.Y - j}] = true
 			}
 		}
 	}
 	return pos
 }
 
-func (u *Unit) canAttackUnit(target coord) bool {
+func (u *Unit) canAttackUnit(target Coord) bool {
 	_, coordInMap := u.getAllAttackCoords()[target]
 	return coordInMap
 }

@@ -2,6 +2,8 @@ package game
 
 import (
 	"errors"
+	"fmt"
+	"log"
 )
 
 type Game struct {
@@ -12,16 +14,39 @@ type Game struct {
 	// gameOver bool
 }
 
-func NewGame() *Game {
-	return &Game{} //Fill out
+func (g *Game) Run() {
+	for i := 0; i < len(g.Players); i++ {
+		go g.playerEventHandler(g.Players[i])
+	}
 }
 
-func (g *Game) Move(p *Player, from, to coord) (bool, error) {
+func (g *Game) playerEventHandler(p *Player) {
+	for {
+		action := <-p.Act
+		switch action.ActionType {
+		case ActionMove:
+			fmt.Println(action)
+			_, err := g.move(p, action.From, action.To)
+			fmt.Println(err)
+		case ActionAttack:
+			_, err := g.attack(p, action.From, action.To)
+			fmt.Println(err)
+		case ActionEnd:
+			ok := g.changeTurn(p)
+			fmt.Println(ok)
+		}
+	}
+}
+
+func (g *Game) move(p *Player, from, to Coord) (bool, error) {
+	log.Println(from, to)
 	if g.turn == p {
-		if u, err := g.Board.getUnit(from.x, from.y); err == nil {
+		if u, err := g.Board.getUnit(from.X, from.Y); err == nil {
+			log.Println("COORD", u.X, u.Y)
 			if u.canMove() {
-				if _, _, canMoveThere := g.Board.getPath(u, to.x, to.y); canMoveThere == true {
-					if notOccupiedCoord, err2 := g.Board.move(u, to.x, to.y); notOccupiedCoord == true {
+				if path, cost, canMoveThere := g.Board.getPath(u, to.X, to.Y); canMoveThere == true {
+					log.Println(cost, path)
+					if notOccupiedCoord, err2 := g.Board.move(u, to.X, to.Y); notOccupiedCoord == true {
 						u.ExhaustedMove = true
 						return true, nil
 					} else {
@@ -40,9 +65,9 @@ func (g *Game) Move(p *Player, from, to coord) (bool, error) {
 	return false, errors.New("not your turn")
 }
 
-func (g *Game) Attack(p *Player, attacker coord, defender coord) (bool, error) {
+func (g *Game) attack(p *Player, attacker Coord, defender Coord) (bool, error) {
 	if g.turn == p {
-		if u, err := g.Board.getUnit(attacker.x, attacker.y); err == nil {
+		if u, err := g.Board.getUnit(attacker.X, attacker.Y); err == nil {
 			if u.canAttack() {
 				if u.canAttackUnit(defender) {
 					u.ExhaustedAttack = true
@@ -67,7 +92,8 @@ func (g *Game) refreshAllUnits(p *Player) {
 	}
 }
 
-func (g *Game) ChangeTurn(p *Player) bool {
+func (g *Game) changeTurn(p *Player) bool {
+	fmt.Println(g.turn, p)
 	if g.turn == p {
 		g.refreshAllUnits(p)
 		g.round++

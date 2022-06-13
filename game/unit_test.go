@@ -44,36 +44,36 @@ func TestFightSurvived(t *testing.T) {
 }
 
 func TestUnit_adjacentAttack1(t *testing.T) {
-	u := Unit{x: 0, y: 2, attackRange: 1}
+	u := Unit{X: 0, Y: 2, attackRange: 1}
 	a := u.getAllAttackCoords()
-	assert.Contains(t, a, coord{0, 3})
+	assert.Contains(t, a, Coord{0, 3})
 }
 
 func TestUnit_adjacentAttack(t *testing.T) {
-	u := Unit{x: 5, y: 5, attackRange: 1}
+	u := Unit{X: 5, Y: 5, attackRange: 1}
 	a := u.getAllAttackCoords()
-	assert.Contains(t, a, coord{4, 5})
-	assert.Contains(t, a, coord{5, 6})
+	assert.Contains(t, a, Coord{4, 5})
+	assert.Contains(t, a, Coord{5, 6})
 }
 
 func TestUnit_getAttackCoordsOne(t *testing.T) {
-	u := Unit{x: 5, y: 5, attackRange: 1}
+	u := Unit{X: 5, Y: 5, attackRange: 1}
 	a := u.getAllAttackCoords()
 	assert.Equal(t, 4, len(a))
 }
 
 func TestUnit_getAttackCoordsTwo(t *testing.T) {
-	u := Unit{x: 5, y: 5, attackRange: 2}
+	u := Unit{X: 5, Y: 5, attackRange: 2}
 	a := u.getAllAttackCoords()
 	assert.Equal(t, 12, len(a))
-	assert.Contains(t, a, coord{6, 6})
-	assert.NotContains(t, a, coord{7, 6})
+	assert.Contains(t, a, Coord{6, 6})
+	assert.NotContains(t, a, Coord{7, 6})
 }
 
 func TestUnit_getAttackCoordsThree(t *testing.T) {
-	u := Unit{x: 5, y: 5, attackRange: 3}
+	u := Unit{X: 5, Y: 5, attackRange: 3}
 	a := u.getAllAttackCoords()
 	assert.Equal(t, 24, len(a))
-	assert.Contains(t, a, coord{6, 6})
-	assert.Contains(t, a, coord{7, 6})
+	assert.Contains(t, a, Coord{6, 6})
+	assert.Contains(t, a, Coord{7, 6})
 }

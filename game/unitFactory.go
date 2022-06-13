@@ -2,7 +2,7 @@ package game
 
 type UnitFactory struct{}
 
-func (u *UnitFactory) Infantry(owner *Player) Unit { // Require owner
+func (u *UnitFactory) Infantry(owner *Player, x, y int) Unit { // Require owner
 	return Unit{
 		Img:           Infantry,
 		Owner:         owner,
@@ -10,5 +10,8 @@ func (u *UnitFactory) Infantry(owner *Player) Unit { // Require owner
 		attackRange:   1,
 		Movement:      3,
 		Damage:        3,
-		HP:            10}
+		HP:            10,
+		X:             x,
+		Y:             y,
+	}
 }

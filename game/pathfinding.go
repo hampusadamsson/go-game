@@ -12,17 +12,17 @@ func (p *pathfinding) unitCanPass(u *Unit, t *tile) bool {
 	}
 }
 
-func (p *pathfinding) findShortestPath(b *Board, unit *Unit, from coord, to coord) ([]coord, int, bool) {
-	history := make(map[coord]int)
-	paths := make(map[coord]coord)
-	neighbours := []coord{from}
+func (p *pathfinding) findShortestPath(b *Board, unit *Unit, from Coord, to Coord) ([]Coord, int, bool) {
+	history := make(map[Coord]int)
+	paths := make(map[Coord]Coord)
+	neighbours := []Coord{from}
 	for len(neighbours) != 0 {
 		curTile := neighbours[0]
 		neighbours = neighbours[1:]
-		next := b.getAdjacent(curTile.x, curTile.y)
+		next := b.getAdjacent(curTile.X, curTile.Y)
 		for _, nextCord := range next {
-			nextTile, _ := b.getTile(nextCord.x, nextCord.y)
-			wayHereCost := history[curTile] + nextTile.cost
+			nextTile, _ := b.getTile(nextCord.X, nextCord.Y)
+			wayHereCost := history[curTile] + nextTile.Cost
 			if unit.Movement >= wayHereCost {
 				if p.unitCanPass(unit, nextTile) {
 					if history[*nextCord] == 0 || wayHereCost < history[*nextCord] {
@@ -42,12 +42,12 @@ func (p *pathfinding) findShortestPath(b *Board, unit *Unit, from coord, to coor
 	}
 }
 
-func (p *pathfinding) getWayBack(paths map[coord]coord, from coord, to coord) []coord {
-	path := make([]coord, 0)
+func (p *pathfinding) getWayBack(paths map[Coord]Coord, from Coord, to Coord) []Coord {
+	path := make([]Coord, 0)
 	path = append(path, to)
 	for {
 		if val, ok := paths[to]; ok {
-			if val.x == from.x && val.y == from.y {
+			if val.X == from.X && val.Y == from.Y {
 				return path
 			}
 			path = append(path, val)

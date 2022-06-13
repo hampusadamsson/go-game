@@ -6,7 +6,7 @@ type tile struct {
 	Img     imageMeta
 	unit    *Unit
 	terrain terrain
-	cost    int
+	Cost    int
 }
 
 type terrain int
