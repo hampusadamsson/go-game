@@ -2,6 +2,7 @@ package game
 
 import (
 	"errors"
+	"log"
 )
 
 type Unit struct {
@@ -52,6 +53,7 @@ func (u *Unit) getAllAttackCoords() map[Coord]bool { // TODO broken
 
 func (u *Unit) canAttackUnit(target Coord) bool {
 	_, coordInMap := u.getAllAttackCoords()[target]
+	log.Println(coordInMap)
 	return coordInMap
 }
 

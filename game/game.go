@@ -25,15 +25,21 @@ func (g *Game) playerEventHandler(p *Player) {
 		action := <-p.Act
 		switch action.ActionType {
 		case ActionMove:
-			fmt.Println(action)
+			// fmt.Println(action)
 			_, err := g.move(p, action.From, action.To)
-			fmt.Println(err)
+			if p.Name != "B" {
+				fmt.Println(err)
+			}
 		case ActionAttack:
 			_, err := g.attack(p, action.From, action.To)
-			fmt.Println(err)
+			if p.Name != "B" {
+				fmt.Println(err)
+			}
 		case ActionEnd:
 			ok := g.changeTurn(p)
-			fmt.Println(ok)
+			if p.Name != "B" {
+				fmt.Println(ok)
+			}
 		}
 	}
 }
@@ -70,6 +76,12 @@ func (g *Game) attack(p *Player, attacker Coord, defender Coord) (bool, error) {
 		if u, err := g.Board.getUnit(attacker.X, attacker.Y); err == nil {
 			if u.canAttack() {
 				if u.canAttackUnit(defender) {
+					ut, _ := g.Board.getUnit(defender.X, defender.Y)
+					u.fight(ut)
+					if ut.HP <= 0 { // make this more soffisticated
+						td, _ := g.Board.getTile(defender.X, defender.Y)
+						td.RemoveUnit()
+					}
 					u.ExhaustedAttack = true
 					return true, nil
 				} else {
@@ -93,7 +105,7 @@ func (g *Game) refreshAllUnits(p *Player) {
 }
 
 func (g *Game) changeTurn(p *Player) bool {
-	fmt.Println(g.turn, p)
+	//fmt.Println(g.turn, p)
 	if g.turn == p {
 		g.refreshAllUnits(p)
 		g.round++

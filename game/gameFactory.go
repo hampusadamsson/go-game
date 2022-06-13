@@ -15,3 +15,13 @@ func (b *GameFactory) Tutorial(player1 *Player) *Game {
 	}
 
 }
+
+func (b *GameFactory) OneVsOne(player1 *Player, player2 *Player) *Game {
+	players := []*Player{player1, player2}
+	return &Game{
+		Players: players,
+		Board:   bf.OneVsOne(player1, player2),
+		turn:    player1,
+	}
+
+}

@@ -7,17 +7,27 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/hampusadamsson/go-game/game"
 )
 
 func main() {
 	gf := game.GameFactory{}
+
 	p1Action := make(chan game.Action)
-	p := &game.Player{"U", p1Action}
-	g := gf.Tutorial(p)
+	p1 := &game.Player{"A", p1Action}
+
+	p2Action := make(chan game.Action)
+	p2 := &game.Player{"B", p2Action}
+
+	g := gf.OneVsOne(p1, p2)
 	g.Run()
 
+	// Start AI loop
+	go endTurnAi(p2Action)
+
+	// Start player loop
 	for {
 		printBoard(g)
 		fmt.Println()
@@ -33,7 +43,6 @@ func main() {
 		switch cliInput[:1] {
 		case "m":
 			l := strings.Split(cliInput, " ")
-			fmt.Println(l)
 			x1, _ := strconv.Atoi(l[1])
 			y1, _ := strconv.Atoi(l[2])
 			x2, _ := strconv.Atoi(l[3])
@@ -65,5 +74,12 @@ func printBoard(g *game.Game) {
 			}
 		}
 		fmt.Println()
+	}
+}
+
+func endTurnAi(ac chan game.Action) {
+	for {
+		time.Sleep(time.Second * 1)
+		ac <- game.Action{ActionType: game.ActionEnd}
 	}
 }
