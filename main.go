@@ -62,6 +62,9 @@ func (g *GameEbiten) Draw(screen *ebiten.Image) {
 				if animation {
 					op.GeoM.Scale(1, 0.98)
 				}
+				if u.ExhaustedMove { // Change hue when exhausted?
+					op.ColorM.ChangeHSV(1, 1, 0.2)
+				}
 				screen.DrawImage(tilesImage.SubImage(image.Rect(x, y, x+size, y+size)).(*ebiten.Image), op)
 			}
 		}
