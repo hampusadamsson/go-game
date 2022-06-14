@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"image"
+	"image/color"
 	_ "image/png"
 	"log"
 	"time"
@@ -9,13 +11,16 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
+	"github.com/hajimehoshi/ebiten/v2/text"
 	"github.com/hampusadamsson/go-game/game"
+	"golang.org/x/image/font/gofont/gomedium"
+	"golang.org/x/image/font/opentype"
 )
 
 const (
-	screenWidth  = 120
-	screenHeight = 120
-	padding      = 25
+	screenWidth  = 220
+	screenHeight = 220
+	padding      = screenWidth / 3 //25
 )
 
 const (
@@ -41,6 +46,11 @@ type GameEbiten struct {
 	hasSelection bool
 	selection    game.Coord
 	playerAction chan game.Action
+	message      string
+}
+
+func (g *GameEbiten) Layout(outsideWidth, outsideHeight int) (int, int) {
+	return screenWidth, screenHeight
 }
 
 func (g *GameEbiten) Update() error {
@@ -48,12 +58,15 @@ func (g *GameEbiten) Update() error {
 	return nil
 }
 
+// Main loop
 func (g *GameEbiten) Draw(screen *ebiten.Image) {
 	for i, l := range g.game.Board.Tiles {
 		for j, tile := range l {
 			op := &ebiten.DrawImageOptions{}
 			// Where to draw it
-			op.GeoM.Translate(float64((j*tileSize)+padding), float64((i*tileSize))+padding)
+			xPos := float64((j * tileSize) + padding)
+			yPos := float64((i * tileSize)) + padding
+			op.GeoM.Translate(xPos, yPos)
 			// What to draw
 			x, y, size, _ := tile.Img.GetImage()
 			screen.DrawImage(tilesImage.SubImage(image.Rect(x, y, x+size, y+size)).(*ebiten.Image), op) // What part of a larger image to draw
@@ -62,15 +75,29 @@ func (g *GameEbiten) Draw(screen *ebiten.Image) {
 				if animation {
 					op.GeoM.Scale(1, 0.98)
 				}
-				if u.ExhaustedMove { // Change hue when exhausted?
-					op.ColorM.ChangeHSV(1, 1, 0.2)
+				if u.ExhaustedMove { // Change hue if exhausted
+					op.ColorM.ChangeHSV(1, 1, 0.25)
 				}
 				screen.DrawImage(tilesImage.SubImage(image.Rect(x, y, x+size, y+size)).(*ebiten.Image), op)
+				hp := fmt.Sprintf("%d", u.HP)
+				fmt.Println(x, y)
+				g.drawStats(screen, hp, int(xPos), int(yPos), color.Black)
 			}
 		}
 	}
 	g.drawSelection(screen)
+	g.drawStats(screen, g.message, 12, 12, color.White)
 	g.handleInput(screen)
+}
+
+// Draws the selection where the cursor is at
+func (g *GameEbiten) drawStats(screen *ebiten.Image, msg string, x int, y int, c color.Color) {
+	f, _ := opentype.Parse(gomedium.TTF)
+	fontFace, _ := opentype.NewFace(f, &opentype.FaceOptions{
+		Size: 8,
+		DPI:  100,
+	})
+	text.Draw(screen, msg, fontFace, x, y, c)
 }
 
 // Draws the selection where the cursor is at
@@ -80,6 +107,17 @@ func (g *GameEbiten) drawSelection(screen *ebiten.Image) {
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Translate(float64((x*tileSize)-5+padding), float64((y*tileSize)-5+padding))
 	xImg, yImg, size, _ := game.Picker.GetImage()
+
+	if g.hasSelection {
+		if defender, err := g.game.Board.GetUnit(g.y, g.x); err == nil { // Make selection easier
+			if attacker, err := g.game.Board.GetUnit(g.selection.X, g.selection.Y); err == nil { // Make selection easier
+				if defender.Owner != attacker.Owner {
+					xImg, yImg, size, _ = game.PickerAttack.GetImage()
+				}
+			}
+
+		}
+	}
 	screen.DrawImage(tilesImage.SubImage(image.Rect(xImg, yImg, xImg+size, yImg+size)).(*ebiten.Image), op)
 }
 
@@ -109,25 +147,30 @@ func (g *GameEbiten) handleInput(screen *ebiten.Image) {
 		if inpututil.IsKeyJustPressed(ebiten.KeyE) {
 			g.hasSelection = false
 			g.playerAction <- game.Action{ActionType: game.ActionEnd}
+			g.message = "End turn"
 		}
 	}
 	// Action key
 	if ebiten.IsKeyPressed(ebiten.KeySpace) {
 		if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
 			if g.hasSelection == false {
-				g.selection = game.Coord{g.y, g.x}
-				g.hasSelection = true
+				if _, err := g.game.Board.GetUnit(g.y, g.x); err == nil { // Make selection easier
+					g.selection = game.Coord{g.y, g.x}
+					g.hasSelection = true
+					g.message = fmt.Sprintf("%d:%d", g.y, g.x)
+				}
 			} else {
-				g.playerAction <- game.Action{ActionType: game.ActionAttack, From: g.selection, To: game.Coord{g.y, g.x}}
-				g.playerAction <- game.Action{ActionType: game.ActionMove, From: g.selection, To: game.Coord{g.y, g.x}}
+				if _, err := g.game.Board.GetUnit(g.y, g.x); err == nil { // Make selection easier
+					g.playerAction <- game.Action{ActionType: game.ActionAttack, From: g.selection, To: game.Coord{g.y, g.x}}
+					g.message = "Attacking"
+				} else {
+					g.playerAction <- game.Action{ActionType: game.ActionMove, From: g.selection, To: game.Coord{g.y, g.x}}
+					g.message = "Moving"
+				}
 				g.hasSelection = false
 			}
 		}
 	}
-}
-
-func (g *GameEbiten) Layout(outsideWidth, outsideHeight int) (int, int) {
-	return screenWidth, screenHeight
 }
 
 func main() {

@@ -55,11 +55,11 @@ func (b *Board) getTiles() chan *tile {
 }
 
 func (b *Board) attack(attacker Coord, defender Coord) (bool, error) {
-	uAttacker, err := b.getUnit(attacker.X, attacker.Y)
+	uAttacker, err := b.GetUnit(attacker.X, attacker.Y)
 	if err != nil {
 		return false, err
 	}
-	uDefender, err := b.getUnit(defender.X, defender.Y)
+	uDefender, err := b.GetUnit(defender.X, defender.Y)
 	if err != nil {
 		return false, err
 	}
@@ -96,7 +96,7 @@ func (b *Board) getUnits(p *Player) []*Unit {
 	return units
 }
 
-func (b *Board) getUnit(x int, y int) (*Unit, error) {
+func (b *Board) GetUnit(x int, y int) (*Unit, error) {
 	t, _ := b.getTile(x, y)
 	if u, err := t.GetUnit(); err == nil {
 		return u, nil

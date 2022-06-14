@@ -55,7 +55,7 @@ func TestGetUnit(t *testing.T) {
 			{tf.Field(), til, tf.Field()},
 		},
 	}
-	u, _ := b.getUnit(0, 1)
+	u, _ := b.GetUnit(0, 1)
 	assert.Equal(t, uni, u)
 }
 

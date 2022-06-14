@@ -47,7 +47,7 @@ func (g *Game) playerEventHandler(p *Player) {
 func (g *Game) move(p *Player, from, to Coord) (bool, error) {
 	log.Println(from, to)
 	if g.turn == p {
-		if u, err := g.Board.getUnit(from.X, from.Y); err == nil {
+		if u, err := g.Board.GetUnit(from.X, from.Y); err == nil {
 			log.Println("COORD", u.X, u.Y)
 			if p == u.Owner {
 				if u.canMove() {
@@ -77,7 +77,7 @@ func (g *Game) move(p *Player, from, to Coord) (bool, error) {
 
 func (g *Game) attack(p *Player, attacker Coord, defender Coord) (bool, error) {
 	if g.turn == p {
-		if u, err := g.Board.getUnit(attacker.X, attacker.Y); err == nil {
+		if u, err := g.Board.GetUnit(attacker.X, attacker.Y); err == nil {
 			if p == u.Owner {
 				if u.canAttack() {
 					if u.canAttackUnit(defender) {
