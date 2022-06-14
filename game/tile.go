@@ -4,7 +4,7 @@ import "errors"
 
 type tile struct {
 	Img     imageMeta
-	unit    *Unit
+	Unit    *Unit
 	terrain terrain
 	Cost    int
 }
@@ -19,20 +19,20 @@ const (
 
 func (t *tile) GetUnit() (*Unit, error) {
 	if t.isOccupied() {
-		return t.unit, nil
+		return t.Unit, nil
 	}
 	return nil, errors.New("no unit at location")
 }
 
 func (t *tile) isOccupied() bool {
-	return t.unit != nil
+	return t.Unit != nil
 }
 
 func (t *tile) AddUnit(u *Unit) {
-	t.unit = u
+	t.Unit = u
 }
 
 func (t *tile) RemoveUnit() {
 	var x *Unit
-	t.unit = x
+	t.Unit = x
 }

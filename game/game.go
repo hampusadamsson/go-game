@@ -49,20 +49,24 @@ func (g *Game) move(p *Player, from, to Coord) (bool, error) {
 	if g.turn == p {
 		if u, err := g.Board.getUnit(from.X, from.Y); err == nil {
 			log.Println("COORD", u.X, u.Y)
-			if u.canMove() {
-				if path, cost, canMoveThere := g.Board.getPath(u, to.X, to.Y); canMoveThere == true {
-					log.Println(cost, path)
-					if notOccupiedCoord, err2 := g.Board.move(u, to.X, to.Y); notOccupiedCoord == true {
-						u.ExhaustedMove = true
-						return true, nil
+			if p == u.Owner {
+				if u.canMove() {
+					if path, cost, canMoveThere := g.Board.getPath(u, to.X, to.Y); canMoveThere == true {
+						log.Println(cost, path)
+						if notOccupiedCoord, err2 := g.Board.move(u, to.X, to.Y); notOccupiedCoord == true {
+							u.ExhaustedMove = true
+							return true, nil
+						} else {
+							return false, err2 // no path to target
+						}
 					} else {
-						return false, err2 // no path to target
+						return false, errors.New("no path to destination")
 					}
 				} else {
-					return false, errors.New("no path to destination")
+					return false, errors.New("unit is exhaused")
 				}
 			} else {
-				return false, errors.New("unit is exhaused")
+				return false, errors.New("unit does not belong to player")
 			}
 		} else {
 			return false, err // no unit at location
@@ -74,21 +78,19 @@ func (g *Game) move(p *Player, from, to Coord) (bool, error) {
 func (g *Game) attack(p *Player, attacker Coord, defender Coord) (bool, error) {
 	if g.turn == p {
 		if u, err := g.Board.getUnit(attacker.X, attacker.Y); err == nil {
-			if u.canAttack() {
-				if u.canAttackUnit(defender) {
-					ut, _ := g.Board.getUnit(defender.X, defender.Y)
-					u.fight(ut)
-					if ut.HP <= 0 { // make this more soffisticated
-						td, _ := g.Board.getTile(defender.X, defender.Y)
-						td.RemoveUnit()
+			if p == u.Owner {
+				if u.canAttack() {
+					if u.canAttackUnit(defender) {
+						success, err := g.Board.attack(attacker, defender)
+						return success, err
+					} else {
+						return false, errors.New("target not in range")
 					}
-					u.ExhaustedAttack = true
-					return true, nil
 				} else {
-					return false, errors.New("target not in range")
+					return false, errors.New("unit is exhaused")
 				}
 			} else {
-				return false, errors.New("unit is exhaused")
+				return false, errors.New("unit does not belong to player")
 			}
 		} else {
 			return false, err // no unit at location

@@ -1,16 +1,131 @@
 package main
 
 import (
-	"bufio"
-	"fmt"
+	"image"
 	_ "image/png"
-	"os"
-	"strconv"
-	"strings"
+	"log"
 	"time"
 
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hampusadamsson/go-game/game"
 )
+
+const (
+	screenWidth  = 120
+	screenHeight = 120
+	padding      = 25
+)
+
+const (
+	tileSize = 15
+)
+
+var (
+	tilesImage *ebiten.Image
+)
+
+func init() {
+	img, _, err := ebitenutil.NewImageFromFile("props/advancewars.png")
+	if err != nil {
+		log.Fatal(err)
+	}
+	tilesImage = ebiten.NewImageFromImage(img)
+}
+
+type GameEbiten struct {
+	game         *game.Game
+	x            int
+	y            int
+	hasSelection bool
+	selection    game.Coord
+	playerAction chan game.Action
+}
+
+func (g *GameEbiten) Update() error {
+	// ebitenutil.DebugPrint(g, "Our first game in Ebiten!")
+	return nil
+}
+
+func (g *GameEbiten) Draw(screen *ebiten.Image) {
+	for i, l := range g.game.Board.Tiles {
+		for j, tile := range l {
+			op := &ebiten.DrawImageOptions{}
+			// Where to draw it
+			op.GeoM.Translate(float64((j*tileSize)+padding), float64((i*tileSize))+padding)
+			// What to draw
+			x, y, size, _ := tile.Img.GetImage()
+			screen.DrawImage(tilesImage.SubImage(image.Rect(x, y, x+size, y+size)).(*ebiten.Image), op) // What part of a larger image to draw
+			if u, _ := tile.GetUnit(); u != nil {
+				x, y, size, animation := u.Img.GetImage()
+				if animation {
+					op.GeoM.Scale(1, 0.98)
+				}
+				screen.DrawImage(tilesImage.SubImage(image.Rect(x, y, x+size, y+size)).(*ebiten.Image), op)
+			}
+		}
+	}
+	g.drawSelection(screen)
+	g.handleInput(screen)
+}
+
+// Draws the selection where the cursor is at
+func (g *GameEbiten) drawSelection(screen *ebiten.Image) {
+	x := g.x
+	y := g.y
+	op := &ebiten.DrawImageOptions{}
+	op.GeoM.Translate(float64((x*tileSize)-5+padding), float64((y*tileSize)-5+padding))
+	xImg, yImg, size, _ := game.Picker.GetImage()
+	screen.DrawImage(tilesImage.SubImage(image.Rect(xImg, yImg, xImg+size, yImg+size)).(*ebiten.Image), op)
+}
+
+func (g *GameEbiten) handleInput(screen *ebiten.Image) {
+	if ebiten.IsKeyPressed(ebiten.KeyUp) && g.y >= 1 {
+		if inpututil.IsKeyJustPressed(ebiten.KeyUp) {
+			g.y--
+		}
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyDown) && g.y <= 1 {
+		if inpututil.IsKeyJustPressed(ebiten.KeyDown) {
+			g.y++
+		}
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyLeft) && g.x >= 1 {
+		if inpututil.IsKeyJustPressed(ebiten.KeyLeft) {
+			g.x--
+		}
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyRight) && g.x <= 1 {
+		if inpututil.IsKeyJustPressed(ebiten.KeyRight) {
+			g.x++
+		}
+	}
+	// End turn
+	if ebiten.IsKeyPressed(ebiten.KeyE) {
+		if inpututil.IsKeyJustPressed(ebiten.KeyE) {
+			g.hasSelection = false
+			g.playerAction <- game.Action{ActionType: game.ActionEnd}
+		}
+	}
+	// Action key
+	if ebiten.IsKeyPressed(ebiten.KeySpace) {
+		if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
+			if g.hasSelection == false {
+				g.selection = game.Coord{g.y, g.x}
+				g.hasSelection = true
+			} else {
+				g.playerAction <- game.Action{ActionType: game.ActionAttack, From: g.selection, To: game.Coord{g.y, g.x}}
+				g.playerAction <- game.Action{ActionType: game.ActionMove, From: g.selection, To: game.Coord{g.y, g.x}}
+				g.hasSelection = false
+			}
+		}
+	}
+}
+
+func (g *GameEbiten) Layout(outsideWidth, outsideHeight int) (int, int) {
+	return screenWidth, screenHeight
+}
 
 func main() {
 	gf := game.GameFactory{}
@@ -20,60 +135,38 @@ func main() {
 
 	p2Action := make(chan game.Action)
 	p2 := &game.Player{"B", p2Action}
+	go endTurnAi(p2Action)
 
 	g := gf.OneVsOne(p1, p2)
 	g.Run()
 
-	// Start AI loop
-	go endTurnAi(p2Action)
+	ge := &GameEbiten{
+		game:         g,
+		playerAction: p1Action,
+	}
 
-	// Start player loop
-	for {
-		printBoard(g)
-		fmt.Println()
-		fmt.Println("(m)ove - ex. m 0 0 3 3")
-		fmt.Println("(a)ttack - ex. m 0 0 3 3")
-		fmt.Println("(e)nd")
-		fmt.Println("(q)uit")
-		fmt.Print("Action: ")
+	ebiten.SetWindowSize(screenWidth*3, screenHeight*3)
+	ebiten.SetWindowTitle("Go-Game")
+	//go g.warp()
 
-		reader := bufio.NewReader(os.Stdin)
-		cliInput, _ := reader.ReadString('\n')
-		cliInput = strings.Replace(cliInput, "\n", " ", 1)
-		switch cliInput[:1] {
-		case "m":
-			l := strings.Split(cliInput, " ")
-			x1, _ := strconv.Atoi(l[1])
-			y1, _ := strconv.Atoi(l[2])
-			x2, _ := strconv.Atoi(l[3])
-			y2, _ := strconv.Atoi(l[4])
-			p1Action <- game.Action{ActionType: game.ActionMove, From: game.Coord{x1, y1}, To: game.Coord{x2, y2}}
-		case "a":
-			l := strings.Split(cliInput, " ")
-			x1, _ := strconv.Atoi(l[1])
-			y1, _ := strconv.Atoi(l[2])
-			x2, _ := strconv.Atoi(l[3])
-			y2, _ := strconv.Atoi(l[4])
-			p1Action <- game.Action{ActionType: game.ActionAttack, From: game.Coord{x1, y1}, To: game.Coord{x2, y2}}
-		case "e":
-			p1Action <- game.Action{ActionType: game.ActionEnd}
-		case "q":
-			break
-		}
-
+	if err := ebiten.RunGame(ge); err != nil {
+		log.Fatal(err)
 	}
 }
 
-func printBoard(g *game.Game) {
-	for _, v := range g.Board.Tiles {
-		for _, t := range v {
-			if u, err := t.GetUnit(); err == nil {
-				fmt.Printf("[%s%d ]", u.Owner.Name[:1], t.Cost)
-			} else {
-				fmt.Printf("[ %d ]", t.Cost)
+// warp adds a 'bouncy' animation to units
+func (g *GameEbiten) warp() {
+	var cur = g.game.Board.Tiles
+	for {
+		time.Sleep(time.Millisecond * 1000)
+		for i := 0; i < len(cur); i++ {
+			for j := 0; j < len(cur[i]); j++ {
+				var tile = &cur[i][j]
+				if unit, err := tile.GetUnit(); err == nil {
+					unit.Img.ToggleAnimation()
+				}
 			}
 		}
-		fmt.Println()
 	}
 }
 

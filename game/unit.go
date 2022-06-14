@@ -62,5 +62,6 @@ func (u *Unit) fight(u2 *Unit) (bool, error) {
 		return false, errors.New("same owner")
 	}
 	u2.HP = u2.HP - u.Damage
+	u.ExhaustedAttack = true
 	return u2.HP <= 0, nil
 }

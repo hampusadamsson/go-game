@@ -54,6 +54,23 @@ func (b *Board) getTiles() chan *tile {
 	return c
 }
 
+func (b *Board) attack(attacker Coord, defender Coord) (bool, error) {
+	uAttacker, err := b.getUnit(attacker.X, attacker.Y)
+	if err != nil {
+		return false, err
+	}
+	uDefender, err := b.getUnit(defender.X, defender.Y)
+	if err != nil {
+		return false, err
+	}
+	uAttacker.fight(uDefender) // TODO add tile defence etc
+	if uDefender.HP <= 0 {     // TODO - attack back?
+		td, _ := b.getTile(defender.X, defender.Y)
+		td.RemoveUnit()
+	}
+	return true, nil
+}
+
 func (b *Board) move(u *Unit, x int, y int) (bool, error) {
 	destTile, _ := b.getTile(x, y)
 	if destTile.isOccupied() {

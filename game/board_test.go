@@ -24,7 +24,7 @@ func TestGetAdjacent(t *testing.T) {
 
 func TestMove(t *testing.T) {
 	u := &Unit{X: 0, Y: 1}
-	til := tile{unit: u}
+	til := tile{Unit: u}
 	tf := TileFactory{}
 	b := Board{
 		Tiles: [][]tile{
@@ -79,9 +79,9 @@ func TestGetUnitsMultiple(t *testing.T) {
 	p1 := &Player{Name: "a"}
 	p2 := &Player{Name: "a"}
 	p3 := &Player{Name: "c"}
-	til1 := tile{unit: &Unit{Owner: p1}}
-	til2 := tile{unit: &Unit{Owner: p1}}
-	til3 := tile{unit: &Unit{Owner: p2}}
+	til1 := tile{Unit: &Unit{Owner: p1}}
+	til2 := tile{Unit: &Unit{Owner: p1}}
+	til3 := tile{Unit: &Unit{Owner: p2}}
 	tf := TileFactory{}
 	b := Board{
 		Tiles: [][]tile{

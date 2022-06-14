@@ -12,8 +12,8 @@ func TestGameTestMoveInSequence(t *testing.T) {
 
 	u1 := &Unit{X: 0, Y: 0, Owner: p1, Movement: 10}
 	u2 := &Unit{X: 0, Y: 3, Owner: p2, Movement: 10}
-	tile1 := tile{unit: u1}
-	tile2 := tile{unit: u2}
+	tile1 := tile{Unit: u1}
+	tile2 := tile{Unit: u2}
 
 	tf := TileFactory{}
 	b := Board{
@@ -55,8 +55,8 @@ func TestAttack(t *testing.T) {
 
 	u1 := &Unit{X: 0, Y: 0, Owner: p1, Movement: 10, attackRange: 1, CanMoveAttack: true}
 	u2 := &Unit{X: 0, Y: 3, Owner: p2, Movement: 10, attackRange: 1, CanMoveAttack: true}
-	tile1 := tile{unit: u1}
-	tile2 := tile{unit: u2}
+	tile1 := tile{Unit: u1}
+	tile2 := tile{Unit: u2}
 
 	tf := TileFactory{}
 	b := Board{

@@ -10,7 +10,7 @@ var (
 	pf    = pathfinding{}
 	one   = tile{Cost: 1}
 	nine  = tile{Cost: 9}
-	enemy = tile{unit: &Unit{Owner: &Player{}}}
+	enemy = tile{Unit: &Unit{Owner: &Player{}}}
 )
 
 func TestRow(t *testing.T) {
@@ -101,7 +101,7 @@ func TestPassableUnits(t *testing.T) {
 	b := Board{
 		Tiles: [][]tile{
 			{one, enemy, one},
-			{one, tile{unit: &Unit{Owner: &p1}}, one},
+			{one, tile{Unit: &Unit{Owner: &p1}}, one},
 			{one, enemy, one},
 		},
 	}
