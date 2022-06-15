@@ -6,7 +6,7 @@ import (
 )
 
 type Unit struct {
-	Img             imageMeta // Metadata for image and rendering
+	Img             ImageMeta // Metadata for image and rendering
 	X               int       // x location in game tiles
 	Y               int       // y location in game tiles
 	Owner           *Player   // Who controls the unit
@@ -29,14 +29,14 @@ func (u *Unit) refresh() {
 }
 
 func (u *Unit) canMove() bool {
-	return u.ExhaustedMove == false
+	return u.ExhaustedMove == false && u.ExhaustedAttack == false
 }
 
 func (u *Unit) canAttack() bool {
 	return u.ExhaustedAttack == false && ((u.ExhaustedMove && u.CanMoveAttack) || u.ExhaustedMove == false)
 }
 
-func (u *Unit) getAllAttackCoords() map[Coord]bool { // TODO broken
+func (u *Unit) GetAllAttackCoords() map[Coord]bool { // TODO broken
 	pos := make(map[Coord]bool, 0)
 	rng := u.attackRange
 	for i := 0; i < rng+1; i++ {
@@ -52,7 +52,7 @@ func (u *Unit) getAllAttackCoords() map[Coord]bool { // TODO broken
 }
 
 func (u *Unit) canAttackUnit(target Coord) bool {
-	_, coordInMap := u.getAllAttackCoords()[target]
+	_, coordInMap := u.GetAllAttackCoords()[target]
 	log.Println(coordInMap)
 	return coordInMap
 }

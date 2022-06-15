@@ -11,7 +11,7 @@ type Game struct {
 	round   int
 	Players []*Player
 	turn    *Player
-	// gameOver bool
+	//gameOver bool
 }
 
 func (g *Game) Run() {
@@ -51,7 +51,7 @@ func (g *Game) move(p *Player, from, to Coord) (bool, error) {
 			log.Println("COORD", u.X, u.Y)
 			if p == u.Owner {
 				if u.canMove() {
-					if path, cost, canMoveThere := g.Board.getPath(u, to.X, to.Y); canMoveThere == true {
+					if path, cost, canMoveThere := g.Board.GetShortestPath(u, to.X, to.Y); canMoveThere == true {
 						log.Println(cost, path)
 						if notOccupiedCoord, err2 := g.Board.move(u, to.X, to.Y); notOccupiedCoord == true {
 							u.ExhaustedMove = true

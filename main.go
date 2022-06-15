@@ -6,6 +6,8 @@ import (
 	"image/color"
 	_ "image/png"
 	"log"
+	"os"
+	"runtime"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -40,13 +42,16 @@ func init() {
 }
 
 type GameEbiten struct {
-	game         *game.Game
-	x            int
-	y            int
-	hasSelection bool
-	selection    game.Coord
-	playerAction chan game.Action
-	message      string
+	game            *game.Game
+	x               int
+	y               int
+	hasSelection    bool
+	selection       game.Coord
+	playerAction    chan game.Action
+	cursor          *game.ImageMeta
+	highlightAttack map[game.Coord]bool
+	pathToCursor    []game.Coord
+	message         string
 }
 
 func (g *GameEbiten) Layout(outsideWidth, outsideHeight int) (int, int) {
@@ -58,8 +63,8 @@ func (g *GameEbiten) Update() error {
 	return nil
 }
 
-// Main loop
-func (g *GameEbiten) Draw(screen *ebiten.Image) {
+func (g *GameEbiten) drawTerrain(screen *ebiten.Image) {
+
 	for i, l := range g.game.Board.Tiles {
 		for j, tile := range l {
 			op := &ebiten.DrawImageOptions{}
@@ -68,26 +73,94 @@ func (g *GameEbiten) Draw(screen *ebiten.Image) {
 			yPos := float64((i * tileSize)) + padding
 			op.GeoM.Translate(xPos, yPos)
 			// What to draw
-			x, y, size, _ := tile.Img.GetImage()
-			screen.DrawImage(tilesImage.SubImage(image.Rect(x, y, x+size, y+size)).(*ebiten.Image), op) // What part of a larger image to draw
+			screen.DrawImage(tilesImage.SubImage(image.Rect(tile.Img.X, tile.Img.Y, tile.Img.X+tile.Img.Size, tile.Img.Y+tile.Img.Size)).(*ebiten.Image), op) // What part of a larger image to draw
+			// Draw units
 			if u, _ := tile.GetUnit(); u != nil {
-				x, y, size, animation := u.Img.GetImage()
-				if animation {
-					op.GeoM.Scale(1, 0.98)
+				// Animate all unit
+				if u.Img.Animation {
+					op.GeoM.Scale(1, 0.99)
 				}
-				if u.ExhaustedMove { // Change hue if exhausted
+				// Change hue if exhausted
+				if u.ExhaustedMove || u.ExhaustedAttack {
 					op.ColorM.ChangeHSV(1, 1, 0.25)
 				}
-				screen.DrawImage(tilesImage.SubImage(image.Rect(x, y, x+size, y+size)).(*ebiten.Image), op)
-				hp := fmt.Sprintf("%d", u.HP)
-				fmt.Println(x, y)
-				g.drawStats(screen, hp, int(xPos), int(yPos), color.Black)
+				screen.DrawImage(tilesImage.SubImage(image.Rect(u.Img.X, u.Img.Y, u.Img.X+u.Img.Size, u.Img.Y+u.Img.Size)).(*ebiten.Image), op)
+				// Draw HP
+				// hp := fmt.Sprintf("%d", u.HP)
+				// g.drawStats(screen, hp, int(xPos), int(yPos), color.Black)
+
+				if u.HP > 9 {
+					op := &ebiten.DrawImageOptions{}
+					xPos := float64((j * tileSize) + padding)
+					yPos := float64((i * tileSize)) + padding
+					op.GeoM.Translate(xPos, yPos)
+					imgNr := game.NumberImage(u.HP / 10)
+					screen.DrawImage(tilesImage.SubImage(image.Rect(imgNr.X, imgNr.Y, imgNr.X+imgNr.Size, imgNr.Y+imgNr.Size*2)).(*ebiten.Image), op)
+					imgNr = game.NumberImage(u.HP % 10)
+					op = &ebiten.DrawImageOptions{}
+					xPos = float64((j * tileSize) + padding)
+					yPos = float64((i * tileSize)) + padding
+					op.GeoM.Translate(xPos+9, yPos)
+					screen.DrawImage(tilesImage.SubImage(image.Rect(imgNr.X, imgNr.Y, imgNr.X+imgNr.Size, imgNr.Y+imgNr.Size*2)).(*ebiten.Image), op)
+				} else {
+					imgNr := game.NumberImage(u.HP)
+					screen.DrawImage(tilesImage.SubImage(image.Rect(imgNr.X, imgNr.Y, imgNr.X+imgNr.Size, imgNr.Y+imgNr.Size*2)).(*ebiten.Image), op)
+				}
 			}
 		}
 	}
+}
+
+func PrintMemUsage() {
+	var m runtime.MemStats
+	runtime.ReadMemStats(&m)
+	// For info on each, see: https://golang.org/pkg/runtime/#MemStats
+	fmt.Printf("Alloc = %v MiB", bToMb(m.Alloc))
+	fmt.Printf("\tTotalAlloc = %v MiB", bToMb(m.TotalAlloc))
+	fmt.Printf("\tSys = %v MiB", bToMb(m.Sys))
+	fmt.Printf("\tNumGC = %v\n", m.NumGC)
+}
+
+func bToMb(b uint64) uint64 {
+	return b / 1024 / 1024
+}
+
+// Main loop
+func (g *GameEbiten) Draw(screen *ebiten.Image) {
+	g.handleInput()
+
+	PrintMemUsage()
+
+	clearing := fmt.Sprintf("FPS:%d\nTPS:%d", ebiten.CurrentFPS(), ebiten.CurrentTPS())
+	ebitenutil.DebugPrint(screen, clearing)
+
+	g.drawTerrain(screen)
+
+	// Draw highlight for attack
+	if g.highlightAttack != nil {
+		for c := range g.highlightAttack {
+			op := &ebiten.DrawImageOptions{}
+			xPos := float64((c.X * tileSize) + padding)
+			yPos := float64((c.Y * tileSize)) + padding
+			op.GeoM.Translate(yPos, xPos)
+			screen.DrawImage(tilesImage.SubImage(image.Rect(game.RedZone.X, game.RedZone.Y, game.RedZone.X+game.RedZone.Size, game.RedZone.Y+game.RedZone.Size)).(*ebiten.Image), op)
+		}
+	}
+
+	// TODO - move to normal draw of terrain
+	// Draw path to cursor
+	if g.pathToCursor != nil {
+		for c := range g.pathToCursor {
+			op := &ebiten.DrawImageOptions{}
+			xPos := float64((g.pathToCursor[c].X * tileSize) + padding)
+			yPos := float64((g.pathToCursor[c].Y * tileSize)) + padding
+			op.GeoM.Translate(yPos, xPos)
+			screen.DrawImage(tilesImage.SubImage(image.Rect(game.GreenZone.X, game.GreenZone.Y, game.GreenZone.X+game.GreenZone.Size, game.GreenZone.Y+game.GreenZone.Size)).(*ebiten.Image), op)
+		}
+	}
+
 	g.drawSelection(screen)
 	g.drawStats(screen, g.message, 12, 12, color.White)
-	g.handleInput(screen)
 }
 
 // Draws the selection where the cursor is at
@@ -106,40 +179,76 @@ func (g *GameEbiten) drawSelection(screen *ebiten.Image) {
 	y := g.y
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Translate(float64((x*tileSize)-5+padding), float64((y*tileSize)-5+padding))
-	xImg, yImg, size, _ := game.Picker.GetImage()
+	screen.DrawImage(tilesImage.SubImage(image.Rect(g.cursor.X, g.cursor.Y, g.cursor.X+g.cursor.Size, g.cursor.Y+g.cursor.Size)).(*ebiten.Image), op)
+}
 
+// The cursor is picker, or attacker based on status
+func (g *GameEbiten) updateCursorImage() {
 	if g.hasSelection {
 		if defender, err := g.game.Board.GetUnit(g.y, g.x); err == nil { // Make selection easier
 			if attacker, err := g.game.Board.GetUnit(g.selection.X, g.selection.Y); err == nil { // Make selection easier
 				if defender.Owner != attacker.Owner {
-					xImg, yImg, size, _ = game.PickerAttack.GetImage()
+					g.cursor = game.PickerAttack
+					return
 				}
 			}
-
+		}
+		// Update path to
+		u, _ := g.game.Board.GetUnit(g.selection.X, g.selection.Y)
+		if u.ExhaustedMove == false {
+			if path, _, ok := g.game.Board.GetShortestPath(u, g.y, g.x); ok {
+				g.pathToCursor = path
+			}
 		}
 	}
-	screen.DrawImage(tilesImage.SubImage(image.Rect(xImg, yImg, xImg+size, yImg+size)).(*ebiten.Image), op)
+	g.cursor = game.Picker
 }
 
-func (g *GameEbiten) handleInput(screen *ebiten.Image) {
+// Handle basic game input
+// left, right, up, down
+// q - quit game
+// e - end turn
+// space - execute action
+// esc - cancel
+func (g *GameEbiten) handleInput() {
 	if ebiten.IsKeyPressed(ebiten.KeyUp) && g.y >= 1 {
 		if inpututil.IsKeyJustPressed(ebiten.KeyUp) {
 			g.y--
+			g.updateCursorImage()
 		}
 	}
-	if ebiten.IsKeyPressed(ebiten.KeyDown) && g.y <= 1 {
+	if ebiten.IsKeyPressed(ebiten.KeyDown) && g.y < len(g.game.Board.Tiles[0])-2 {
 		if inpututil.IsKeyJustPressed(ebiten.KeyDown) {
 			g.y++
+			g.updateCursorImage()
 		}
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyLeft) && g.x >= 1 {
 		if inpututil.IsKeyJustPressed(ebiten.KeyLeft) {
 			g.x--
+			g.updateCursorImage()
 		}
 	}
-	if ebiten.IsKeyPressed(ebiten.KeyRight) && g.x <= 1 {
+	if ebiten.IsKeyPressed(ebiten.KeyRight) && g.x < len(g.game.Board.Tiles) {
 		if inpututil.IsKeyJustPressed(ebiten.KeyRight) {
 			g.x++
+			g.updateCursorImage()
+		}
+	}
+	// Cancel
+	if ebiten.IsKeyPressed(ebiten.KeyEscape) {
+		if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
+			g.hasSelection = false
+			g.message = "Cancel"
+			g.updateCursorImage()
+			g.highlightAttack = nil
+			g.pathToCursor = nil
+		}
+	}
+	// Exit game
+	if ebiten.IsKeyPressed(ebiten.KeyQ) {
+		if inpututil.IsKeyJustPressed(ebiten.KeyQ) {
+			os.Exit(0)
 		}
 	}
 	// End turn
@@ -148,19 +257,25 @@ func (g *GameEbiten) handleInput(screen *ebiten.Image) {
 			g.hasSelection = false
 			g.playerAction <- game.Action{ActionType: game.ActionEnd}
 			g.message = "End turn"
+			g.updateCursorImage()
+			g.highlightAttack = nil
+			g.pathToCursor = nil
 		}
 	}
 	// Action key
 	if ebiten.IsKeyPressed(ebiten.KeySpace) {
 		if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
-			if g.hasSelection == false {
-				if _, err := g.game.Board.GetUnit(g.y, g.x); err == nil { // Make selection easier
+			if g.hasSelection == false { // 1st selection
+				if u, err := g.game.Board.GetUnit(g.y, g.x); err == nil {
 					g.selection = game.Coord{g.y, g.x}
+					if u.ExhaustedAttack == false {
+						g.highlightAttack = u.GetAllAttackCoords()
+					}
 					g.hasSelection = true
 					g.message = fmt.Sprintf("%d:%d", g.y, g.x)
 				}
-			} else {
-				if _, err := g.game.Board.GetUnit(g.y, g.x); err == nil { // Make selection easier
+			} else { // 2d selection
+				if _, err := g.game.Board.GetUnit(g.y, g.x); err == nil {
 					g.playerAction <- game.Action{ActionType: game.ActionAttack, From: g.selection, To: game.Coord{g.y, g.x}}
 					g.message = "Attacking"
 				} else {
@@ -168,6 +283,9 @@ func (g *GameEbiten) handleInput(screen *ebiten.Image) {
 					g.message = "Moving"
 				}
 				g.hasSelection = false
+				g.highlightAttack = nil
+				g.pathToCursor = nil
+				g.updateCursorImage()
 			}
 		}
 	}
@@ -183,17 +301,20 @@ func main() {
 	p2 := &game.Player{"B", p2Action}
 	go endTurnAi(p2Action)
 
-	g := gf.OneVsOne(p1, p2)
+	//g := gf.OneVsOne(p1, p2)
+	g := gf.OneVsOneFirstGame(p1, p2)
 	g.Run()
 
 	ge := &GameEbiten{
 		game:         g,
 		playerAction: p1Action,
+		cursor:       game.Picker,
 	}
 
 	ebiten.SetWindowSize(screenWidth*3, screenHeight*3)
 	ebiten.SetWindowTitle("Go-Game")
-	//go g.warp()
+
+	go ge.warp()
 
 	if err := ebiten.RunGame(ge); err != nil {
 		log.Fatal(err)
@@ -218,7 +339,7 @@ func (g *GameEbiten) warp() {
 
 func endTurnAi(ac chan game.Action) {
 	for {
-		time.Sleep(time.Second * 1)
+		time.Sleep(time.Millisecond * 250)
 		ac <- game.Action{ActionType: game.ActionEnd}
 	}
 }

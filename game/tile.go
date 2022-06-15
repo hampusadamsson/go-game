@@ -3,7 +3,7 @@ package game
 import "errors"
 
 type tile struct {
-	Img     imageMeta
+	Img     ImageMeta
 	Unit    *Unit
 	terrain terrain
 	Cost    int

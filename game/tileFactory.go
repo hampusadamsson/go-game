@@ -4,7 +4,7 @@ type TileFactory struct{}
 
 func (u *TileFactory) Field() tile {
 	return tile{
-		Img:     Plain,
+		Img:     *Plain,
 		terrain: ground,
 		Cost:    1,
 	}
@@ -12,16 +12,16 @@ func (u *TileFactory) Field() tile {
 
 func (u *TileFactory) Ocean() tile {
 	return tile{
-		Img:     Ocean,
+		Img:     *Ocean,
 		terrain: sea,
-		Cost:    1,
+		Cost:    2,
 	}
 }
 
 func (u *TileFactory) Mountain() tile {
 	return tile{
-		Img:     Mountain,
+		Img:     *Mountain,
 		terrain: difficult,
-		Cost:    3,
+		Cost:    4,
 	}
 }

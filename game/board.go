@@ -122,6 +122,6 @@ func (b *Board) getAdjacent(x int, y int) []*Coord {
 	return ad
 }
 
-func (b *Board) getPath(u *Unit, x int, y int) ([]Coord, int, bool) {
+func (b *Board) GetShortestPath(u *Unit, x int, y int) ([]Coord, int, bool) {
 	return b.pf.findShortestPath(b, u, Coord{u.X, u.Y}, Coord{x, y})
 }
