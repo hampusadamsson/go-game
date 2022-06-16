@@ -1,6 +1,8 @@
 package game
 
-import "errors"
+import (
+	"errors"
+)
 
 type tile struct {
 	Img     ImageMeta

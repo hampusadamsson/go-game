@@ -27,7 +27,6 @@ func (b *Board) getTile(x int, y int) (*tile, error) {
 		return nil, err
 	} else {
 		return &b.Tiles[c.X][c.Y], nil
-
 	}
 }
 
@@ -84,7 +83,7 @@ func (b *Board) move(u *Unit, x int, y int) (bool, error) {
 	return true, nil
 }
 
-func (b *Board) getUnits(p *Player) []*Unit {
+func (b *Board) GetUnits(p *Player) []*Unit {
 	units := make([]*Unit, 0)
 	for elem := range b.getTiles() {
 		if u, err := elem.GetUnit(); err == nil {
@@ -97,7 +96,10 @@ func (b *Board) getUnits(p *Player) []*Unit {
 }
 
 func (b *Board) GetUnit(x int, y int) (*Unit, error) {
-	t, _ := b.getTile(x, y)
+	t, err := b.getTile(x, y)
+	if err != nil {
+		return nil, err
+	}
 	if u, err := t.GetUnit(); err == nil {
 		return u, nil
 	} else {

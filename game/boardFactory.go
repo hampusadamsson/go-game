@@ -43,6 +43,8 @@ func (b *BoardFactory) First(p1 *Player, p2 *Player) Board {
 		uf.HeavyTank(p1, 4, 0),
 		uf.Artilery(p1, 5, 0),
 		//p2
+		uf.HeavyTank(p2, 2, 8),
+		uf.Artilery(p2, 3, 8),
 		uf.Tank(p2, 4, 8),
 		uf.Infantry(p2, 5, 8),
 		uf.Mech(p2, 6, 8),

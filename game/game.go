@@ -10,7 +10,7 @@ type Game struct {
 	Board   Board
 	round   int
 	Players []*Player
-	turn    *Player
+	Turn    *Player
 	//gameOver bool
 }
 
@@ -46,7 +46,7 @@ func (g *Game) playerEventHandler(p *Player) {
 
 func (g *Game) move(p *Player, from, to Coord) (bool, error) {
 	log.Println(from, to)
-	if g.turn == p {
+	if g.Turn == p {
 		if u, err := g.Board.GetUnit(from.X, from.Y); err == nil {
 			log.Println("COORD", u.X, u.Y)
 			if p == u.Owner {
@@ -76,31 +76,35 @@ func (g *Game) move(p *Player, from, to Coord) (bool, error) {
 }
 
 func (g *Game) attack(p *Player, attacker Coord, defender Coord) (bool, error) {
-	if g.turn == p {
-		if u, err := g.Board.GetUnit(attacker.X, attacker.Y); err == nil {
-			if p == u.Owner {
-				if u.canAttack() {
-					if u.canAttackUnit(defender) {
-						success, err := g.Board.attack(attacker, defender)
-						return success, err
+	if g.Turn == p {
+		if _, err := g.Board.GetUnit(defender.X, defender.Y); err == nil {
+			if u, err := g.Board.GetUnit(attacker.X, attacker.Y); err == nil {
+				if p == u.Owner {
+					if u.canAttack() {
+						if u.canAttackUnit(defender) {
+							success, err := g.Board.attack(attacker, defender)
+							return success, err
+						} else {
+							return false, errors.New("target not in range")
+						}
 					} else {
-						return false, errors.New("target not in range")
+						return false, errors.New("unit is exhaused")
 					}
 				} else {
-					return false, errors.New("unit is exhaused")
+					return false, errors.New("unit does not belong to player")
 				}
 			} else {
-				return false, errors.New("unit does not belong to player")
+				return false, err // no unit at location attacker
 			}
 		} else {
-			return false, err // no unit at location
+			return false, err // no unit at location defender
 		}
 	}
 	return false, errors.New("not your turn")
 }
 
 func (g *Game) refreshAllUnits(p *Player) {
-	units := g.Board.getUnits(p)
+	units := g.Board.GetUnits(p)
 	for i := 0; i < len(units); i++ {
 		units[i].refresh()
 	}
@@ -108,10 +112,10 @@ func (g *Game) refreshAllUnits(p *Player) {
 
 func (g *Game) changeTurn(p *Player) bool {
 	//fmt.Println(g.turn, p)
-	if g.turn == p {
+	if g.Turn == p {
 		g.refreshAllUnits(p)
 		g.round++
-		g.turn = g.Players[g.round%len(g.Players)]
+		g.Turn = g.Players[g.round%len(g.Players)]
 		return true
 	}
 	return false

@@ -25,7 +25,7 @@ func TestGameTestMoveInSequence(t *testing.T) {
 	g := Game{
 		Players: []*Player{p1, p2},
 		Board:   b,
-		turn:    p1,
+		Turn:    p1,
 	}
 
 	_, err := g.move(p2, Coord{0, 3}, Coord{0, 2})
@@ -68,7 +68,7 @@ func TestAttack(t *testing.T) {
 	g := Game{
 		Players: []*Player{p1, p2},
 		Board:   b,
-		turn:    p1,
+		Turn:    p1,
 	}
 
 	successp2, _ := g.attack(p2, Coord{0, 3}, Coord{0, 0})
@@ -86,13 +86,13 @@ func TestGameChangeTurn(t *testing.T) {
 	p2 := &Player{"b", nil}
 	g := Game{
 		Players: []*Player{p1, p2},
-		turn:    p1,
+		Turn:    p1,
 	}
-	assert.Equal(t, g.turn, p1)
+	assert.Equal(t, g.Turn, p1)
 	g.changeTurn(p1)
-	assert.Equal(t, g.turn, p2)
+	assert.Equal(t, g.Turn, p2)
 	g.changeTurn(p1)
-	assert.Equal(t, g.turn, p2)
+	assert.Equal(t, g.Turn, p2)
 	g.changeTurn(p2)
-	assert.Equal(t, g.turn, p1)
+	assert.Equal(t, g.Turn, p1)
 }

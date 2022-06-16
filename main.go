@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"image"
-	"image/color"
 	_ "image/png"
 	"log"
 	"os"
@@ -13,10 +12,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
-	"github.com/hajimehoshi/ebiten/v2/text"
 	"github.com/hampusadamsson/go-game/game"
-	"golang.org/x/image/font/gofont/gomedium"
-	"golang.org/x/image/font/opentype"
 )
 
 const (
@@ -101,26 +97,34 @@ func (g *GameEbiten) drawTerrain(screen *ebiten.Image) {
 				if u.ExhaustedMove || u.ExhaustedAttack {
 					op.ColorM.ChangeHSV(1, 1, 0.25)
 				}
-				screen.DrawImage(tilesImage.SubImage(image.Rect(u.Img.X, u.Img.Y, u.Img.X+u.Img.Size, u.Img.Y+u.Img.Size)).(*ebiten.Image), op)
+
+				// Different colors for team
+				var team int
+				if u.Owner == g.game.Players[0] {
+					team = 0
+				} else {
+					team = 18
+				}
+				screen.DrawImage(tilesImage.SubImage(image.Rect(u.Img.X, u.Img.Y+team, u.Img.X+u.Img.Size, u.Img.Y+u.Img.Size+team)).(*ebiten.Image), op)
 
 				// Draw HP
-				if u.HP > 9 {
-					op := &ebiten.DrawImageOptions{}
-					xPos := float64((j * tileSize) + padding)
-					yPos := float64((i * tileSize)) + padding
-					op.GeoM.Translate(xPos, yPos)
-					imgNr := game.NumberImage(u.HP / 10)
-					screen.DrawImage(tilesImage.SubImage(image.Rect(imgNr.X, imgNr.Y, imgNr.X+imgNr.Size, imgNr.Y+imgNr.Size*2)).(*ebiten.Image), op)
-					imgNr = game.NumberImage(u.HP % 10)
-					op = &ebiten.DrawImageOptions{}
-					xPos = float64((j * tileSize) + padding)
-					yPos = float64((i * tileSize)) + padding
-					op.GeoM.Translate(xPos+9, yPos)
-					screen.DrawImage(tilesImage.SubImage(image.Rect(imgNr.X, imgNr.Y, imgNr.X+imgNr.Size, imgNr.Y+imgNr.Size*2)).(*ebiten.Image), op)
-				} else {
-					imgNr := game.NumberImage(u.HP)
-					screen.DrawImage(tilesImage.SubImage(image.Rect(imgNr.X, imgNr.Y, imgNr.X+imgNr.Size, imgNr.Y+imgNr.Size*2)).(*ebiten.Image), op)
-				}
+				// if u.HP > 9 {
+				// 	op := &ebiten.DrawImageOptions{}
+				// 	xPos := float64((j * tileSize) + padding)
+				// 	yPos := float64((i * tileSize)) + padding
+				// 	op.GeoM.Translate(xPos, yPos)
+				// 	imgNr := game.NumberImage(u.HP / 10)
+				// 	screen.DrawImage(tilesImage.SubImage(image.Rect(imgNr.X, imgNr.Y, imgNr.X+imgNr.Size, imgNr.Y+imgNr.Size*2)).(*ebiten.Image), op)
+				// 	imgNr = game.NumberImage(u.HP % 10)
+				// 	op = &ebiten.DrawImageOptions{}
+				// 	xPos = float64((j * tileSize) + padding)
+				// 	yPos = float64((i * tileSize)) + padding
+				// 	op.GeoM.Translate(xPos+9, yPos)
+				// 	screen.DrawImage(tilesImage.SubImage(image.Rect(imgNr.X, imgNr.Y, imgNr.X+imgNr.Size, imgNr.Y+imgNr.Size*2)).(*ebiten.Image), op)
+				// } else {
+				imgNr := game.NumberImage(u.HP)
+				screen.DrawImage(tilesImage.SubImage(image.Rect(imgNr.X, imgNr.Y, imgNr.X+imgNr.Size, imgNr.Y+imgNr.Size*2)).(*ebiten.Image), op)
+				// }
 			}
 		}
 	}
@@ -142,27 +146,27 @@ func bToMb(b uint64) uint64 {
 
 // Main loop
 func (g *GameEbiten) Draw(screen *ebiten.Image) {
+	g.handleInput()
 
 	//PrintMemUsage()
 
 	clearing := fmt.Sprintf("FPS: %f\nTPS: %f", ebiten.CurrentFPS(), ebiten.CurrentTPS())
 	ebitenutil.DebugPrint(screen, clearing)
 
-	g.handleInput()
 	g.drawTerrain(screen)
 	g.drawSelection(screen)
-	g.drawStats(screen, g.message, 12, 12, color.White)
+	// g.drawStats(screen, g.message, 12, 12, color.White)
 }
 
 // Draws the selection where the cursor is at
-func (g *GameEbiten) drawStats(screen *ebiten.Image, msg string, x int, y int, c color.Color) {
-	f, _ := opentype.Parse(gomedium.TTF)
-	fontFace, _ := opentype.NewFace(f, &opentype.FaceOptions{
-		Size: 8,
-		DPI:  100,
-	})
-	text.Draw(screen, msg, fontFace, x, y, c)
-}
+// func (g *GameEbiten) drawStats(screen *ebiten.Image, msg string, x int, y int, c color.Color) {
+// 	f, _ := opentype.Parse(gomedium.TTF)
+// 	fontFace, _ := opentype.NewFace(f, &opentype.FaceOptions{
+// 		Size: 8,
+// 		DPI:  100,
+// 	})
+// 	text.Draw(screen, msg, fontFace, x, y, c)
+// }
 
 // Draws the selection where the cursor is at
 func (g *GameEbiten) drawSelection(screen *ebiten.Image) {
@@ -254,15 +258,15 @@ func (g *GameEbiten) handleInput() {
 					g.selection = game.Coord{g.y, g.x}
 					if u.ExhaustedAttack == false {
 						g.highlightAttack = u.GetAllAttackCoords()
+						u, _ := g.game.Board.GetUnit(g.selection.X, g.selection.Y)
+						if u.ExhaustedMove == false {
+							path := g.game.Board.GetAllPaths(u)
+							g.highlightPaths = path
+						}
 					}
 					g.hasSelection = true
 					g.message = fmt.Sprintf("%d:%d", g.y, g.x)
 					// Update path to
-					u, _ := g.game.Board.GetUnit(g.selection.X, g.selection.Y)
-					if u.ExhaustedMove == false {
-						path := g.game.Board.GetAllPaths(u)
-						g.highlightPaths = path
-					}
 
 				}
 			} else { // 2d selection
@@ -290,10 +294,14 @@ func main() {
 
 	p2Action := make(chan game.Action)
 	p2 := &game.Player{"B", p2Action}
-	go endTurnAi(p2Action)
 
 	//g := gf.OneVsOne(p1, p2)
 	g := gf.OneVsOneFirstGame(p1, p2)
+
+	//go endTurnAi(p2Action)
+	go DumbAi(g, p1, p1Action)
+	go DumbAi(g, p2, p2Action)
+
 	g.Run()
 
 	ge := &GameEbiten{
@@ -328,9 +336,42 @@ func (g *GameEbiten) warp() {
 	}
 }
 
+// End turn AI
 func endTurnAi(ac chan game.Action) {
 	for {
 		time.Sleep(time.Millisecond * 250)
 		ac <- game.Action{ActionType: game.ActionEnd}
+	}
+}
+
+// Very stupid AI
+func DumbAi(g *game.Game, p *game.Player, ac chan game.Action) {
+	for {
+		time.Sleep(time.Millisecond * 50)
+		if g.Turn == p { // Naive 2 player AI
+			for _, u := range g.Board.GetUnits(p) {
+				time.Sleep(time.Millisecond * 200)
+				from := game.Coord{u.X, u.Y}
+				// Try attacking
+				for a, _ := range u.GetAllAttackCoords() {
+					ac <- game.Action{ActionType: game.ActionAttack, From: from, To: a}
+				}
+
+				// Try moving
+				for m := range g.Board.GetAllPaths(u) {
+					ac <- game.Action{ActionType: game.ActionMove, From: from, To: m}
+				}
+
+				// Try attacking again
+				for a, _ := range u.GetAllAttackCoords() {
+					ac <- game.Action{ActionType: game.ActionAttack, From: from, To: a}
+				}
+
+			}
+
+			// Last action - end turn
+			time.Sleep(time.Millisecond * 300)
+			ac <- game.Action{ActionType: game.ActionEnd}
+		}
 	}
 }

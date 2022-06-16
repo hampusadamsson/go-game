@@ -70,7 +70,7 @@ func TestGetUnits(t *testing.T) {
 			{tf.Field(), til, tf.Field()},
 		},
 	}
-	u := b.getUnits(p1)
+	u := b.GetUnits(p1)
 	assert.Equal(t, 1, len(u))
 	assert.Equal(t, uni, u[0])
 }
@@ -89,7 +89,7 @@ func TestGetUnitsMultiple(t *testing.T) {
 			{til2, til3},
 		},
 	}
-	assert.Equal(t, 2, len(b.getUnits(p1)))
-	assert.Equal(t, 1, len(b.getUnits(p2)))
-	assert.Equal(t, 0, len(b.getUnits(p3)))
+	assert.Equal(t, 2, len(b.GetUnits(p1)))
+	assert.Equal(t, 1, len(b.GetUnits(p2)))
+	assert.Equal(t, 0, len(b.GetUnits(p3)))
 }

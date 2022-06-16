@@ -11,7 +11,7 @@ func (b *GameFactory) OneVsOne(player1 *Player, player2 *Player) *Game {
 	return &Game{
 		Players: players,
 		Board:   bf.OneVsOne(player1, player2),
-		turn:    player1,
+		Turn:    player1,
 	}
 
 }
@@ -21,7 +21,7 @@ func (b *GameFactory) OneVsOneFirstGame(player1 *Player, player2 *Player) *Game 
 	return &Game{
 		Players: players,
 		Board:   bf.First(player1, player2),
-		turn:    player1,
+		Turn:    player1,
 	}
 
 }
