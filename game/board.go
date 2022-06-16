@@ -5,8 +5,8 @@ import (
 )
 
 type Board struct {
-	Tiles [][]tile
-	pf    pathfinding
+	Tiles       [][]tile
+	pathfinding pathfinding
 }
 
 type Coord struct {
@@ -123,5 +123,9 @@ func (b *Board) getAdjacent(x int, y int) []*Coord {
 }
 
 func (b *Board) GetShortestPath(u *Unit, x int, y int) ([]Coord, int, bool) {
-	return b.pf.findShortestPath(b, u, Coord{u.X, u.Y}, Coord{x, y})
+	return b.pathfinding.findShortestPath(b, u, Coord{u.X, u.Y}, Coord{x, y})
+}
+
+func (b *Board) GetAllPaths(u *Unit) map[Coord]int {
+	return b.pathfinding.GetAllPaths(b, u, Coord{u.X, u.Y})
 }

@@ -80,7 +80,21 @@ func (u *UnitFactory) HeavyTank(owner *Player, x, y int) Unit { // Require owner
 		attackRange:   0,
 		Movement:      5,
 		Damage:        0,
-		HP:            99,
+		HP:            10,
+		X:             x,
+		Y:             y,
+	}
+}
+
+func (u *UnitFactory) Artilery(owner *Player, x, y int) Unit { // Require owner
+	return Unit{
+		Img:           *Artilery,
+		Owner:         owner,
+		CanMoveAttack: false,
+		attackRange:   2,
+		Movement:      5,
+		Damage:        10,
+		HP:            9,
 		X:             x,
 		Y:             y,
 	}

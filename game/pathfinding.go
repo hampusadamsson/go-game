@@ -12,6 +12,33 @@ func (p *pathfinding) unitCanPass(u *Unit, t *tile) bool {
 	}
 }
 
+// Duplicate
+func (p *pathfinding) GetAllPaths(b *Board, unit *Unit, from Coord) map[Coord]int {
+	history := make(map[Coord]int)
+	paths := make(map[Coord]Coord)
+	neighbours := []Coord{from}
+	for len(neighbours) != 0 {
+		curTile := neighbours[0]
+		neighbours = neighbours[1:]
+		next := b.getAdjacent(curTile.X, curTile.Y)
+		for _, nextCord := range next {
+			nextTile, _ := b.getTile(nextCord.X, nextCord.Y)
+			wayHereCost := history[curTile] + nextTile.Cost
+			if unit.Movement >= wayHereCost {
+				if p.unitCanPass(unit, nextTile) {
+					if history[*nextCord] == 0 || wayHereCost < history[*nextCord] {
+						history[*nextCord] = wayHereCost
+						paths[*nextCord] = curTile
+						neighbours = append(neighbours, *nextCord)
+					}
+
+				}
+			}
+		}
+	}
+	return history
+}
+
 func (p *pathfinding) findShortestPath(b *Board, unit *Unit, from Coord, to Coord) ([]Coord, int, bool) {
 	history := make(map[Coord]int)
 	paths := make(map[Coord]Coord)

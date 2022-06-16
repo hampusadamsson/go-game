@@ -50,7 +50,7 @@ type GameEbiten struct {
 	playerAction    chan game.Action
 	cursor          *game.ImageMeta
 	highlightAttack map[game.Coord]bool
-	pathToCursor    []game.Coord
+	highlightPaths  map[game.Coord]int
 	message         string
 }
 
@@ -74,21 +74,36 @@ func (g *GameEbiten) drawTerrain(screen *ebiten.Image) {
 			op.GeoM.Translate(xPos, yPos)
 			// What to draw
 			screen.DrawImage(tilesImage.SubImage(image.Rect(tile.Img.X, tile.Img.Y, tile.Img.X+tile.Img.Size, tile.Img.Y+tile.Img.Size)).(*ebiten.Image), op) // What part of a larger image to draw
+
+			// Draw movement
+			if g.highlightPaths != nil {
+				if _, ok := g.highlightPaths[game.Coord{i, j}]; ok {
+					screen.DrawImage(tilesImage.SubImage(image.Rect(game.GreenZone.X, game.GreenZone.Y, game.GreenZone.X+game.GreenZone.Size, game.GreenZone.Y+game.GreenZone.Size)).(*ebiten.Image), op)
+				}
+			}
+
+			// Draw attacks
+			if g.highlightAttack != nil {
+				if _, ok := g.highlightAttack[game.Coord{i, j}]; ok {
+					screen.DrawImage(tilesImage.SubImage(image.Rect(game.RedZone.X, game.RedZone.Y, game.RedZone.X+game.RedZone.Size, game.RedZone.Y+game.RedZone.Size)).(*ebiten.Image), op)
+				}
+			}
+
 			// Draw units
 			if u, _ := tile.GetUnit(); u != nil {
+
 				// Animate all unit
 				if u.Img.Animation {
 					op.GeoM.Scale(1, 0.99)
 				}
+
 				// Change hue if exhausted
 				if u.ExhaustedMove || u.ExhaustedAttack {
 					op.ColorM.ChangeHSV(1, 1, 0.25)
 				}
 				screen.DrawImage(tilesImage.SubImage(image.Rect(u.Img.X, u.Img.Y, u.Img.X+u.Img.Size, u.Img.Y+u.Img.Size)).(*ebiten.Image), op)
-				// Draw HP
-				// hp := fmt.Sprintf("%d", u.HP)
-				// g.drawStats(screen, hp, int(xPos), int(yPos), color.Black)
 
+				// Draw HP
 				if u.HP > 9 {
 					op := &ebiten.DrawImageOptions{}
 					xPos := float64((j * tileSize) + padding)
@@ -127,38 +142,14 @@ func bToMb(b uint64) uint64 {
 
 // Main loop
 func (g *GameEbiten) Draw(screen *ebiten.Image) {
-	g.handleInput()
 
-	PrintMemUsage()
+	//PrintMemUsage()
 
-	clearing := fmt.Sprintf("FPS:%d\nTPS:%d", ebiten.CurrentFPS(), ebiten.CurrentTPS())
+	clearing := fmt.Sprintf("FPS: %f\nTPS: %f", ebiten.CurrentFPS(), ebiten.CurrentTPS())
 	ebitenutil.DebugPrint(screen, clearing)
 
+	g.handleInput()
 	g.drawTerrain(screen)
-
-	// Draw highlight for attack
-	if g.highlightAttack != nil {
-		for c := range g.highlightAttack {
-			op := &ebiten.DrawImageOptions{}
-			xPos := float64((c.X * tileSize) + padding)
-			yPos := float64((c.Y * tileSize)) + padding
-			op.GeoM.Translate(yPos, xPos)
-			screen.DrawImage(tilesImage.SubImage(image.Rect(game.RedZone.X, game.RedZone.Y, game.RedZone.X+game.RedZone.Size, game.RedZone.Y+game.RedZone.Size)).(*ebiten.Image), op)
-		}
-	}
-
-	// TODO - move to normal draw of terrain
-	// Draw path to cursor
-	if g.pathToCursor != nil {
-		for c := range g.pathToCursor {
-			op := &ebiten.DrawImageOptions{}
-			xPos := float64((g.pathToCursor[c].X * tileSize) + padding)
-			yPos := float64((g.pathToCursor[c].Y * tileSize)) + padding
-			op.GeoM.Translate(yPos, xPos)
-			screen.DrawImage(tilesImage.SubImage(image.Rect(game.GreenZone.X, game.GreenZone.Y, game.GreenZone.X+game.GreenZone.Size, game.GreenZone.Y+game.GreenZone.Size)).(*ebiten.Image), op)
-		}
-	}
-
 	g.drawSelection(screen)
 	g.drawStats(screen, g.message, 12, 12, color.White)
 }
@@ -191,13 +182,6 @@ func (g *GameEbiten) updateCursorImage() {
 					g.cursor = game.PickerAttack
 					return
 				}
-			}
-		}
-		// Update path to
-		u, _ := g.game.Board.GetUnit(g.selection.X, g.selection.Y)
-		if u.ExhaustedMove == false {
-			if path, _, ok := g.game.Board.GetShortestPath(u, g.y, g.x); ok {
-				g.pathToCursor = path
 			}
 		}
 	}
@@ -242,7 +226,7 @@ func (g *GameEbiten) handleInput() {
 			g.message = "Cancel"
 			g.updateCursorImage()
 			g.highlightAttack = nil
-			g.pathToCursor = nil
+			g.highlightPaths = nil
 		}
 	}
 	// Exit game
@@ -259,7 +243,7 @@ func (g *GameEbiten) handleInput() {
 			g.message = "End turn"
 			g.updateCursorImage()
 			g.highlightAttack = nil
-			g.pathToCursor = nil
+			g.highlightPaths = nil
 		}
 	}
 	// Action key
@@ -273,6 +257,13 @@ func (g *GameEbiten) handleInput() {
 					}
 					g.hasSelection = true
 					g.message = fmt.Sprintf("%d:%d", g.y, g.x)
+					// Update path to
+					u, _ := g.game.Board.GetUnit(g.selection.X, g.selection.Y)
+					if u.ExhaustedMove == false {
+						path := g.game.Board.GetAllPaths(u)
+						g.highlightPaths = path
+					}
+
 				}
 			} else { // 2d selection
 				if _, err := g.game.Board.GetUnit(g.y, g.x); err == nil {
@@ -284,7 +275,7 @@ func (g *GameEbiten) handleInput() {
 				}
 				g.hasSelection = false
 				g.highlightAttack = nil
-				g.pathToCursor = nil
+				g.highlightPaths = nil
 				g.updateCursorImage()
 			}
 		}

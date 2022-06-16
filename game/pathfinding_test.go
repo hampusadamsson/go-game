@@ -90,7 +90,7 @@ func TestUnitMaxRangeOverstep(t *testing.T) {
 func TestImpassableUnits(t *testing.T) {
 	b := Board{
 		Tiles: [][]tile{{one, enemy, one}, {one, enemy, one}, {one, enemy, one}},
-		pf:    pf,
+		pathfinding:    pf,
 	}
 	_, _, canMoveHere := pf.findShortestPath(&b, &Unit{Movement: 25}, Coord{0, 0}, Coord{2, 2})
 	assert.False(t, canMoveHere)

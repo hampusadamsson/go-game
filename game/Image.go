@@ -42,4 +42,5 @@ var (
 	Supply    = &ImageMeta{X: 250 + (18 * 3), Y: 1444, Size: 15, Animation: true}
 	Tank      = &ImageMeta{X: 250 + (18 * 4), Y: 1444, Size: 15, Animation: true}
 	HeavyTank = &ImageMeta{X: 250 + (18 * 5), Y: 1444, Size: 15, Animation: true}
+	Artilery  = &ImageMeta{X: 250 + (18 * 6), Y: 1444, Size: 15, Animation: true}
 )
