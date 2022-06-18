@@ -3,15 +3,14 @@ package game
 import (
 	"errors"
 	"fmt"
-	"log"
 )
 
 type Game struct {
-	Board   Board
-	round   int
-	Players []*Player
-	Turn    *Player
-	//gameOver bool
+	Board    Board
+	round    int
+	Players  []*Player
+	Turn     *Player
+	GameOver bool
 }
 
 func (g *Game) Run() {
@@ -20,18 +19,25 @@ func (g *Game) Run() {
 	}
 }
 
+func (g *Game) checkWinCondition(p *Player) { // TODO - make more than two players
+	pUnits := g.Board.GetUnits(p)
+	if len(pUnits) == 0 {
+		g.GameOver = true
+	}
+}
+
 func (g *Game) playerEventHandler(p *Player) {
 	for {
+		g.checkWinCondition(p) // TODO - don't need to this all the time
 		action := <-p.Act
 		switch action.ActionType {
 		case ActionMove:
-			// fmt.Println(action)
 			_, err := g.move(p, action.From, action.To)
 			if p.Name != "B" {
 				fmt.Println(err)
 			}
 		case ActionAttack:
-			_, err := g.attack(p, action.From, action.To)
+			_, _, err := g.attack(p, action.From, action.To)
 			if p.Name != "B" {
 				fmt.Println(err)
 			}
@@ -41,18 +47,22 @@ func (g *Game) playerEventHandler(p *Player) {
 				fmt.Println(ok)
 			}
 		}
+
+		if g.GameOver {
+			return
+		}
 	}
 }
 
 func (g *Game) move(p *Player, from, to Coord) (bool, error) {
-	log.Println(from, to)
+	// log.Println(from, to)
 	if g.Turn == p {
 		if u, err := g.Board.GetUnit(from.X, from.Y); err == nil {
-			log.Println("COORD", u.X, u.Y)
+			// log.Println("COORD", u.X, u.Y)
 			if p == u.Owner {
 				if u.canMove() {
-					if path, cost, canMoveThere := g.Board.GetShortestPath(u, to.X, to.Y); canMoveThere == true {
-						log.Println(cost, path)
+					if _, _, canMoveThere := g.Board.GetShortestPath(u, to.X, to.Y); canMoveThere == true {
+						// log.Println(cost, path)
 						if notOccupiedCoord, err2 := g.Board.move(u, to.X, to.Y); notOccupiedCoord == true {
 							u.ExhaustedMove = true
 							return true, nil
@@ -75,32 +85,33 @@ func (g *Game) move(p *Player, from, to Coord) (bool, error) {
 	return false, errors.New("not your turn")
 }
 
-func (g *Game) attack(p *Player, attacker Coord, defender Coord) (bool, error) {
+// Attack returns - attackIsSuccesful, unitDidDie, error
+func (g *Game) attack(p *Player, attacker Coord, defender Coord) (bool, bool, error) {
 	if g.Turn == p {
 		if _, err := g.Board.GetUnit(defender.X, defender.Y); err == nil {
 			if u, err := g.Board.GetUnit(attacker.X, attacker.Y); err == nil {
 				if p == u.Owner {
 					if u.canAttack() {
 						if u.canAttackUnit(defender) {
-							success, err := g.Board.attack(attacker, defender)
-							return success, err
+							success, unitDied, err := g.Board.attack(attacker, defender)
+							return success, unitDied, err
 						} else {
-							return false, errors.New("target not in range")
+							return false, false, errors.New("target not in range")
 						}
 					} else {
-						return false, errors.New("unit is exhaused")
+						return false, false, errors.New("unit is exhaused")
 					}
 				} else {
-					return false, errors.New("unit does not belong to player")
+					return false, false, errors.New("unit does not belong to player")
 				}
 			} else {
-				return false, err // no unit at location attacker
+				return false, false, err // no unit at location attacker
 			}
 		} else {
-			return false, err // no unit at location defender
+			return false, false, err // no unit at location defender
 		}
 	}
-	return false, errors.New("not your turn")
+	return false, false, errors.New("not your turn")
 }
 
 func (g *Game) refreshAllUnits(p *Player) {
@@ -111,7 +122,6 @@ func (g *Game) refreshAllUnits(p *Player) {
 }
 
 func (g *Game) changeTurn(p *Player) bool {
-	//fmt.Println(g.turn, p)
 	if g.Turn == p {
 		g.refreshAllUnits(p)
 		g.round++

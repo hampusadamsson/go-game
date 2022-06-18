@@ -53,21 +53,22 @@ func (b *Board) getTiles() chan *tile {
 	return c
 }
 
-func (b *Board) attack(attacker Coord, defender Coord) (bool, error) {
+func (b *Board) attack(attacker Coord, defender Coord) (bool, bool, error) {
 	uAttacker, err := b.GetUnit(attacker.X, attacker.Y)
 	if err != nil {
-		return false, err
+		return false, false, err
 	}
 	uDefender, err := b.GetUnit(defender.X, defender.Y)
 	if err != nil {
-		return false, err
+		return false, false, err
 	}
 	uAttacker.fight(uDefender) // TODO add tile defence etc
-	if uDefender.HP <= 0 {     // TODO - attack back?
+	unitDied := uDefender.HP <= 0
+	if unitDied { // TODO - attack back?
 		td, _ := b.getTile(defender.X, defender.Y)
 		td.RemoveUnit()
 	}
-	return true, nil
+	return true, unitDied, nil
 }
 
 func (b *Board) move(u *Unit, x int, y int) (bool, error) {
@@ -81,6 +82,18 @@ func (b *Board) move(u *Unit, x int, y int) (bool, error) {
 	u.X = x
 	u.Y = y
 	return true, nil
+}
+
+func (b *Board) GetUnitsEnemy(p *Player) []*Unit {
+	units := make([]*Unit, 0)
+	for elem := range b.getTiles() {
+		if u, err := elem.GetUnit(); err == nil {
+			if u.Owner != p {
+				units = append(units, u)
+			}
+		}
+	}
+	return units
 }
 
 func (b *Board) GetUnits(p *Player) []*Unit {
@@ -122,6 +135,36 @@ func (b *Board) getAdjacent(x int, y int) []*Coord {
 		ad = append(ad, t)
 	}
 	return ad
+}
+
+// Path solutions
+
+// helper func to GetShortestPathToNearestEnemy
+func (b *Board) getNearestEnemy(u *Unit) Coord {
+	deltaDistance := 100000
+	var nearestTarget Coord
+	for _, u2 := range b.GetUnitsEnemy(u.Owner) {
+		target := Coord{u2.X, u2.Y}
+		if dDis := b.pathfinding.manhatanDistanceBetween(Coord{u.X, u.Y}, target); dDis < deltaDistance {
+			deltaDistance = dDis
+			nearestTarget = target
+		}
+	}
+	return nearestTarget
+}
+
+func (b *Board) GetShortestPathToNearestEnemy(u *Unit) []Coord {
+	target := b.getNearestEnemy(u)
+	deltaDistance := 100000
+	var nearestTarget Coord
+	for destination, _ := range b.GetAllPaths(u) {
+		if dDis := b.pathfinding.manhatanDistanceBetween(destination, target); dDis < deltaDistance {
+			deltaDistance = dDis
+			nearestTarget = destination
+		}
+	}
+	path, _, _ := b.GetShortestPath(u, nearestTarget.X, nearestTarget.Y)
+	return path
 }
 
 func (b *Board) GetShortestPath(u *Unit, x int, y int) ([]Coord, int, bool) {

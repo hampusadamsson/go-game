@@ -150,7 +150,7 @@ func (g *GameEbiten) Draw(screen *ebiten.Image) {
 
 	//PrintMemUsage()
 
-	clearing := fmt.Sprintf("FPS: %f\nTPS: %f", ebiten.CurrentFPS(), ebiten.CurrentTPS())
+	clearing := fmt.Sprintf("FPS: %f\nTPS: %f\ngameOver: %t", ebiten.CurrentFPS(), ebiten.CurrentTPS(), g.game.GameOver)
 	ebitenutil.DebugPrint(screen, clearing)
 
 	g.drawTerrain(screen)
@@ -299,7 +299,7 @@ func main() {
 	g := gf.OneVsOneFirstGame(p1, p2)
 
 	//go endTurnAi(p2Action)
-	go DumbAi(g, p1, p1Action)
+	// go DumbAi(g, p1, p1Action)
 	go DumbAi(g, p2, p2Action)
 
 	g.Run()
@@ -347,10 +347,10 @@ func endTurnAi(ac chan game.Action) {
 // Very stupid AI
 func DumbAi(g *game.Game, p *game.Player, ac chan game.Action) {
 	for {
-		time.Sleep(time.Millisecond * 50)
+		time.Sleep(time.Millisecond * 10)
 		if g.Turn == p { // Naive 2 player AI
 			for _, u := range g.Board.GetUnits(p) {
-				time.Sleep(time.Millisecond * 200)
+				time.Sleep(time.Millisecond * 10)
 				from := game.Coord{u.X, u.Y}
 				// Try attacking
 				for a, _ := range u.GetAllAttackCoords() {
@@ -358,19 +358,19 @@ func DumbAi(g *game.Game, p *game.Player, ac chan game.Action) {
 				}
 
 				// Try moving
-				for m := range g.Board.GetAllPaths(u) {
+				for _, m := range g.Board.GetShortestPathToNearestEnemy(u) {
 					ac <- game.Action{ActionType: game.ActionMove, From: from, To: m}
 				}
 
-				// Try attacking again
+			// Try attacking again
+				from = game.Coord{u.X, u.Y}
 				for a, _ := range u.GetAllAttackCoords() {
 					ac <- game.Action{ActionType: game.ActionAttack, From: from, To: a}
 				}
 
 			}
-
 			// Last action - end turn
-			time.Sleep(time.Millisecond * 300)
+			time.Sleep(time.Millisecond * 220)
 			ac <- game.Action{ActionType: game.ActionEnd}
 		}
 	}

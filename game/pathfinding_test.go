@@ -13,6 +13,23 @@ var (
 	enemy = tile{Unit: &Unit{Owner: &Player{}}}
 )
 
+func TestManhattan(t *testing.T) {
+	delta := pf.manhatanDistanceBetween(Coord{0, 0}, Coord{0, 0})
+	assert.Equal(t, 0, delta)
+
+	delta = pf.manhatanDistanceBetween(Coord{0, 0}, Coord{0, -1})
+	assert.Equal(t, 1, delta)
+
+	delta = pf.manhatanDistanceBetween(Coord{0, 1}, Coord{0, 0})
+	assert.Equal(t, 1, delta)
+
+	delta = pf.manhatanDistanceBetween(Coord{0, 1}, Coord{1, 0})
+	assert.Equal(t, 2, delta)
+
+	delta = pf.manhatanDistanceBetween(Coord{0, 0}, Coord{2, 4})
+	assert.Equal(t, 6, delta)
+}
+
 func TestRow(t *testing.T) {
 	b := Board{
 		Tiles: [][]tile{
@@ -89,8 +106,8 @@ func TestUnitMaxRangeOverstep(t *testing.T) {
 
 func TestImpassableUnits(t *testing.T) {
 	b := Board{
-		Tiles: [][]tile{{one, enemy, one}, {one, enemy, one}, {one, enemy, one}},
-		pathfinding:    pf,
+		Tiles:       [][]tile{{one, enemy, one}, {one, enemy, one}, {one, enemy, one}},
+		pathfinding: pf,
 	}
 	_, _, canMoveHere := pf.findShortestPath(&b, &Unit{Movement: 25}, Coord{0, 0}, Coord{2, 2})
 	assert.False(t, canMoveHere)

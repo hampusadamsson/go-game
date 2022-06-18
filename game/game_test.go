@@ -71,13 +71,13 @@ func TestAttack(t *testing.T) {
 		Turn:    p1,
 	}
 
-	successp2, _ := g.attack(p2, Coord{0, 3}, Coord{0, 0})
+	successp2, _, _ := g.attack(p2, Coord{0, 3}, Coord{0, 0})
 	assert.False(t, successp2) // not your turn
 
-	successp1, _ := g.attack(p1, Coord{0, 3}, Coord{0, 0})
+	successp1, _, _ := g.attack(p1, Coord{0, 3}, Coord{0, 0})
 	assert.False(t, successp1) // not in range
 	g.move(p1, Coord{0, 0}, Coord{0, 2})
-	successp12, _ := g.attack(p1, Coord{0, 2}, Coord{0, 3})
+	successp12, _, _ := g.attack(p1, Coord{0, 2}, Coord{0, 3})
 	assert.True(t, successp12)
 }
 

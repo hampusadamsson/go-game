@@ -13,6 +13,7 @@ type Unit struct {
 	ExhaustedAttack bool      // true = unit has an attack action
 	Movement        int       // Number of tiles unit can move
 	CanMoveAttack   bool      // Can the unit move and attack
+	minAttackRange  int       // Range for attack - 1 means melee
 	attackRange     int       // Range for attack - 1 means melee
 	Damage          int
 	HP              int
@@ -35,15 +36,17 @@ func (u *Unit) canAttack() bool {
 	return u.ExhaustedAttack == false && ((u.ExhaustedMove && u.CanMoveAttack) || u.ExhaustedMove == false)
 }
 
-func (u *Unit) GetAllAttackCoords() map[Coord]bool { // TODO broken
+func (u *Unit) GetAllAttackCoords() map[Coord]bool {
 	pos := make(map[Coord]bool, 0)
 	rng := u.attackRange
 	for i := 0; i < rng+1; i++ {
 		for j := -rng + i; j <= rng-i; j++ {
 			if u.X == u.X+i && u.Y == u.Y-j { // your own tile
 			} else {
-				pos[Coord{u.X + i, u.Y - j}] = true
-				pos[Coord{u.X - i, u.Y - j}] = true
+				if abs(i)+abs(j) > u.minAttackRange {
+					pos[Coord{u.X + i, u.Y - j}] = true
+					pos[Coord{u.X - i, u.Y - j}] = true
+				}
 			}
 		}
 	}

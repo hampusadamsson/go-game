@@ -51,7 +51,7 @@ func (u *UnitFactory) Supply(owner *Player, x, y int) Unit { // Require owner
 		CanMoveAttack: true,
 		attackRange:   0,
 		Movement:      5,
-		Damage:        0,
+		Damage:        1,
 		HP:            8,
 		X:             x,
 		Y:             y,
@@ -65,7 +65,7 @@ func (u *UnitFactory) Tank(owner *Player, x, y int) Unit { // Require owner
 		CanMoveAttack: true,
 		attackRange:   0,
 		Movement:      5,
-		Damage:        0,
+		Damage:        5,
 		HP:            9,
 		X:             x,
 		Y:             y,
@@ -79,7 +79,7 @@ func (u *UnitFactory) HeavyTank(owner *Player, x, y int) Unit { // Require owner
 		CanMoveAttack: true,
 		attackRange:   0,
 		Movement:      5,
-		Damage:        0,
+		Damage:        8,
 		HP:            10,
 		X:             x,
 		Y:             y,
@@ -88,14 +88,30 @@ func (u *UnitFactory) HeavyTank(owner *Player, x, y int) Unit { // Require owner
 
 func (u *UnitFactory) Artilery(owner *Player, x, y int) Unit { // Require owner
 	return Unit{
-		Img:           *Artilery,
-		Owner:         owner,
-		CanMoveAttack: false,
-		attackRange:   2,
-		Movement:      5,
-		Damage:        10,
-		HP:            9,
-		X:             x,
-		Y:             y,
+		Img:            *Artilery,
+		Owner:          owner,
+		CanMoveAttack:  false,
+		attackRange:    3,
+		minAttackRange: 1,
+		Movement:       5,
+		Damage:         5,
+		HP:             9,
+		X:              x,
+		Y:              y,
+	}
+}
+
+func (u *UnitFactory) Rocket(owner *Player, x, y int) Unit { // Require owner
+	return Unit{
+		Img:            *Rocket,
+		Owner:          owner,
+		CanMoveAttack:  false,
+		attackRange:    4,
+		minAttackRange: 2,
+		Movement:       5,
+		Damage:         6,
+		HP:             6,
+		X:              x,
+		Y:              y,
 	}
 }

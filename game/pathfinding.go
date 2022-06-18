@@ -39,6 +39,18 @@ func (p *pathfinding) GetAllPaths(b *Board, unit *Unit, from Coord) map[Coord]in
 	return history
 }
 
+func (p *pathfinding) manhatanDistanceBetween(from Coord, to Coord) int {
+	return abs(from.X-to.X) + abs(from.Y-to.Y)
+}
+
+// abs returns the absolute value of x.
+func abs(x int) int {
+	if x < 0 {
+		return -x
+	}
+	return x
+}
+
 func (p *pathfinding) findShortestPath(b *Board, unit *Unit, from Coord, to Coord) ([]Coord, int, bool) {
 	history := make(map[Coord]int)
 	paths := make(map[Coord]Coord)
