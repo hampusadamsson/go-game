@@ -18,7 +18,7 @@ import (
 const (
 	screenWidth  = 220
 	screenHeight = 220
-	padding      = screenWidth / 3 //25
+	padding      = screenWidth / 3
 )
 
 const (
@@ -55,7 +55,6 @@ func (g *GameEbiten) Layout(outsideWidth, outsideHeight int) (int, int) {
 }
 
 func (g *GameEbiten) Update() error {
-	// ebitenutil.DebugPrint(g, "Our first game in Ebiten!")
 	return nil
 }
 
@@ -107,24 +106,9 @@ func (g *GameEbiten) drawTerrain(screen *ebiten.Image) {
 				}
 				screen.DrawImage(tilesImage.SubImage(image.Rect(u.Img.X, u.Img.Y+team, u.Img.X+u.Img.Size, u.Img.Y+u.Img.Size+team)).(*ebiten.Image), op)
 
-				// Draw HP
-				// if u.HP > 9 {
-				// 	op := &ebiten.DrawImageOptions{}
-				// 	xPos := float64((j * tileSize) + padding)
-				// 	yPos := float64((i * tileSize)) + padding
-				// 	op.GeoM.Translate(xPos, yPos)
-				// 	imgNr := game.NumberImage(u.HP / 10)
-				// 	screen.DrawImage(tilesImage.SubImage(image.Rect(imgNr.X, imgNr.Y, imgNr.X+imgNr.Size, imgNr.Y+imgNr.Size*2)).(*ebiten.Image), op)
-				// 	imgNr = game.NumberImage(u.HP % 10)
-				// 	op = &ebiten.DrawImageOptions{}
-				// 	xPos = float64((j * tileSize) + padding)
-				// 	yPos = float64((i * tileSize)) + padding
-				// 	op.GeoM.Translate(xPos+9, yPos)
-				// 	screen.DrawImage(tilesImage.SubImage(image.Rect(imgNr.X, imgNr.Y, imgNr.X+imgNr.Size, imgNr.Y+imgNr.Size*2)).(*ebiten.Image), op)
-				// } else {
+				// Display health
 				imgNr := game.NumberImage(u.HP)
 				screen.DrawImage(tilesImage.SubImage(image.Rect(imgNr.X, imgNr.Y, imgNr.X+imgNr.Size, imgNr.Y+imgNr.Size*2)).(*ebiten.Image), op)
-				// }
 			}
 		}
 	}
@@ -299,7 +283,7 @@ func main() {
 	g := gf.OneVsOneFirstGame(p1, p2)
 
 	//go endTurnAi(p2Action)
-	// go ChargerAi(g, p1, p1Action)
+	go ChargerAi(g, p1, p1Action) // Remove this for Playing yourself
 	go ChargerAi(g, p2, p2Action)
 
 	g.Run()
