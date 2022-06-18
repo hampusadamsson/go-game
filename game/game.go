@@ -2,7 +2,7 @@ package game
 
 import (
 	"errors"
-	"fmt"
+	"log"
 )
 
 type Game struct {
@@ -14,6 +14,7 @@ type Game struct {
 }
 
 func (g *Game) Run() {
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	for i := 0; i < len(g.Players); i++ {
 		go g.playerEventHandler(g.Players[i])
 	}
@@ -33,19 +34,16 @@ func (g *Game) playerEventHandler(p *Player) {
 		switch action.ActionType {
 		case ActionMove:
 			_, err := g.move(p, action.From, action.To)
-			if p.Name != "B" {
-				fmt.Println(err)
+			if p.Name != "B" && err != nil {
+				log.Println(err)
 			}
 		case ActionAttack:
 			_, _, err := g.attack(p, action.From, action.To)
-			if p.Name != "B" {
-				fmt.Println(err)
+			if p.Name != "B" && err != nil {
+				log.Println(err)
 			}
 		case ActionEnd:
-			ok := g.changeTurn(p)
-			if p.Name != "B" {
-				fmt.Println(ok)
-			}
+			g.changeTurn(p)
 		}
 
 		if g.GameOver {

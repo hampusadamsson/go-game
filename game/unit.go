@@ -2,6 +2,7 @@ package game
 
 import (
 	"errors"
+	"log"
 )
 
 type Unit struct {
@@ -62,7 +63,10 @@ func (u *Unit) fight(u2 *Unit) (bool, error) {
 	if u.sameOwner(u2) {
 		return false, errors.New("same owner")
 	}
-	u2.HP = u2.HP - u.Damage
+	// TODO - fix this one
+	damage := int(float64(u.Damage) * (float64(u.HP) / 10.0)) // Scales damage with HP
+	log.Println(damage)
+	u2.HP = u2.HP - damage
 	u.ExhaustedAttack = true
 	return u2.HP <= 0, nil
 }

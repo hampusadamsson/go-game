@@ -194,10 +194,10 @@ func (g *GameEbiten) updateCursorImage() {
 
 // Handle basic game input
 // left, right, up, down
-// q - quit game
-// e - end turn
 // space - execute action
-// esc - cancel
+// e - end turn
+// q - cancel
+// esc - quit game
 func (g *GameEbiten) handleInput() {
 	if ebiten.IsKeyPressed(ebiten.KeyUp) && g.y >= 1 {
 		if inpututil.IsKeyJustPressed(ebiten.KeyUp) {
@@ -223,20 +223,20 @@ func (g *GameEbiten) handleInput() {
 			g.updateCursorImage()
 		}
 	}
-	// Cancel
+	// Exit game
 	if ebiten.IsKeyPressed(ebiten.KeyEscape) {
 		if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
+			os.Exit(0)
+		}
+	}
+	// Cancel
+	if ebiten.IsKeyPressed(ebiten.KeyQ) {
+		if inpututil.IsKeyJustPressed(ebiten.KeyQ) {
 			g.hasSelection = false
 			g.message = "Cancel"
 			g.updateCursorImage()
 			g.highlightAttack = nil
 			g.highlightPaths = nil
-		}
-	}
-	// Exit game
-	if ebiten.IsKeyPressed(ebiten.KeyQ) {
-		if inpututil.IsKeyJustPressed(ebiten.KeyQ) {
-			os.Exit(0)
 		}
 	}
 	// End turn
@@ -299,8 +299,8 @@ func main() {
 	g := gf.OneVsOneFirstGame(p1, p2)
 
 	//go endTurnAi(p2Action)
-	// go DumbAi(g, p1, p1Action)
-	go DumbAi(g, p2, p2Action)
+	// go ChargerAi(g, p1, p1Action)
+	go ChargerAi(g, p2, p2Action)
 
 	g.Run()
 
@@ -336,6 +336,8 @@ func (g *GameEbiten) warp() {
 	}
 }
 
+// AI Below
+
 // End turn AI
 func endTurnAi(ac chan game.Action) {
 	for {
@@ -345,7 +347,7 @@ func endTurnAi(ac chan game.Action) {
 }
 
 // Very stupid AI
-func DumbAi(g *game.Game, p *game.Player, ac chan game.Action) {
+func ChargerAi(g *game.Game, p *game.Player, ac chan game.Action) {
 	for {
 		time.Sleep(time.Millisecond * 10)
 		if g.Turn == p { // Naive 2 player AI
@@ -361,13 +363,15 @@ func DumbAi(g *game.Game, p *game.Player, ac chan game.Action) {
 				for _, m := range g.Board.GetShortestPathToNearestEnemy(u) {
 					ac <- game.Action{ActionType: game.ActionMove, From: from, To: m}
 				}
-
-			// Try attacking again
-				from = game.Coord{u.X, u.Y}
+			}
+			// Redo try attack - race condition in chanel?
+			for _, u := range g.Board.GetUnits(p) {
+				time.Sleep(time.Millisecond * 10)
+				from := game.Coord{u.X, u.Y}
+				// Try attacking
 				for a, _ := range u.GetAllAttackCoords() {
 					ac <- game.Action{ActionType: game.ActionAttack, From: from, To: a}
 				}
-
 			}
 			// Last action - end turn
 			time.Sleep(time.Millisecond * 220)
